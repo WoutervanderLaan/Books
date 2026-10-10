@@ -1,0 +1,4 @@
+"Datum";"Naam / Omschrijving";"Rekening";"Tegenrekening";"Code";"Af Bij";"Bedrag (EUR)";"Mutatiesoort";"Mededelingen";"Saldo na mutatie";"Tag"
+"20240203";"Albert Heijn 1403 AMSTERDAM";"NL69INGB0123456789";"";"BA";"Af";"23,45";"Betaalautomaat";"Pasvolgnr: 003 03-02-2024 18:12 Transactie: 12AB34 Term: CT123456 Apple Pay Valutadatum: 03-02-2024";"1.976,55";""
+"20240201";"Werkgever B.V.";"NL69INGB0123456789";"NL91ABNA0417164300";"OV";"Bij";"3.250,00";"Overschrijving";"Naam: Werkgever B.V. Omschrijving: Salaris januari 2024 IBAN: NL91ABNA0417164300 Kenmerk: 2024-01 Valutadatum: 01-02-2024";"2.000,00";""
+"20240131";"Verhuurder Jansen";"NL69INGB0123456789";"NL20RABO0300065264";"GT";"Af";"1.250,00";"Online bankieren";"Naam: Verhuurder Jansen Omschrijving: Huur februari IBAN: NL20RABO0300065264 Valutadatum: 31-01-2024";"-1.250,00";""
