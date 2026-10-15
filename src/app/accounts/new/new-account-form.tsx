@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { BriefcaseBusiness, Wallet } from "lucide-react";
+import { BriefcaseBusiness, PiggyBank, Wallet } from "lucide-react";
 import { createAccountAction } from "@/app/actions/accounts";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import { Card, Field, Input, cn } from "@/components/ui";
@@ -16,8 +16,9 @@ export function NewAccountForm() {
         </Field>
         <fieldset>
           <legend className="mb-2 text-[13px] font-medium text-ink-2">Type</legend>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <KindOption value="personal" defaultChecked icon={<Wallet className="size-4" aria-hidden />} title="Personal" text="Household spending, budget vs. actual, savings and trends." />
+            <KindOption value="savings" icon={<PiggyBank className="size-4" aria-hidden />} title="Savings" text="A savings account of your own. Transfers to and from it count as saving, not spending." />
             <KindOption value="business" icon={<BriefcaseBusiness className="size-4" aria-hidden />} title="Business" text="Adds VAT returns, profit & loss, hours, assets and an income tax estimate." />
           </div>
         </fieldset>

@@ -3,7 +3,7 @@ import { and, asc, desc, eq, gte, isNull, like, lt, lte, or, sql, type SQL } fro
 import type { DB } from "../db/connection";
 import { categories, transactions, type Transaction } from "../db/schema";
 import { normalizeIban } from "../text";
-import type { VatCode } from "../types";
+import type { CategoryKind, VatCode } from "../types";
 import { applyRules } from "./categorize";
 
 export interface TransactionFilter {
@@ -23,7 +23,7 @@ export interface TransactionRow extends Transaction {
   categoryName: string | null;
   categoryGroup: string | null;
   categoryVatCode: VatCode | null;
-  categoryKind: string | null;
+  categoryKind: CategoryKind | null;
 }
 
 function where(filter: TransactionFilter): SQL {

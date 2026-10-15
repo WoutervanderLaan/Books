@@ -18,6 +18,7 @@ export interface AccountInput {
   kind: AccountKind;
   iban?: string | null;
   description?: string | null;
+  isSavings?: boolean;
 }
 
 export function createAccount(db: DB, input: AccountInput): Account {
@@ -27,6 +28,7 @@ export function createAccount(db: DB, input: AccountInput): Account {
       name: input.name.trim(),
       kind: input.kind,
       iban: normalizeIban(input.iban),
+      isSavings: input.kind === "personal" && !!input.isSavings,
       description: input.description?.trim() || null,
     })
     .returning()
@@ -36,7 +38,7 @@ export function createAccount(db: DB, input: AccountInput): Account {
 export function updateAccount(
   db: DB,
   id: number,
-  patch: Partial<Pick<Account, "name" | "iban" | "description" | "openingBalance" | "autoBalance" | "vatKor" | "archived" | "csvMapping">>,
+  patch: Partial<Pick<Account, "name" | "iban" | "description" | "openingBalance" | "autoBalance" | "vatKor" | "isSavings" | "archived" | "csvMapping">>,
 ) {
   const values = { ...patch };
   if ("iban" in values) values.iban = normalizeIban(values.iban);

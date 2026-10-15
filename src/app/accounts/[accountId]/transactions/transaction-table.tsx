@@ -11,12 +11,14 @@ import { formatMoney } from "@/lib/format";
 import type { TransactionRow } from "@/lib/services/transactions";
 import { splitVat } from "@/lib/tax/vat";
 import { formatIban } from "@/lib/text";
-import { VAT_CODES, VAT_CODE_LABELS, type VatCode } from "@/lib/types";
+import { VAT_CODES, VAT_CODE_LABELS, type CategoryKind, type VatCode } from "@/lib/types";
+import { kindFitsAmount } from "@/lib/rules/engine";
 
 interface CategoryChoice {
   id: number;
   name: string;
   groupName: string;
+  kind: CategoryKind;
   vatCode: VatCode | null;
 }
 
@@ -142,9 +144,12 @@ export function TransactionTable({
                           onChange={(e) => changeCategory(tx.id, e.target.value)}
                         >
                           <option value="">— Uncategorised —</option>
-                          <CategoryOptions categories={categories} />
+                          <CategoryOptions categories={categories} amount={tx.amount} />
                         </Select>
                       </div>
+                      {tx.categoryKind && !kindFitsAmount(tx.categoryKind, tx.amount) ? (
+                        <p className="mt-0.5 pl-5 text-[11px] text-muted">{tx.amount >= 0 ? "Refund — lowers spending" : "Paid back — lowers income"}</p>
+                      ) : null}
                     </td>
                     {business ? (
                       <td className={cn(td, "text-right text-xs whitespace-nowrap text-ink-2 tabular")}>

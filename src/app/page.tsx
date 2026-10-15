@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, FileUp, ListChecks, LockKeyhole, PieChart, Wallet } from "lucide-react";
-import { Badge, Card, LinkButton, PageHeader } from "@/components/ui";
+import { ArrowRight, BriefcaseBusiness, FileUp, ListChecks, LockKeyhole, PieChart, PiggyBank, Wallet } from "lucide-react";
+import { Badge, Card, LinkButton, Notice, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/format";
 import { getDb } from "@/lib/server";
 import { accountStats, listAccounts } from "@/lib/services/accounts";
 import { listImports } from "@/lib/services/imports";
+import { transferOverview } from "@/lib/services/transfers";
 import { formatIban } from "@/lib/text";
 
 export default function HomePage() {
@@ -20,6 +21,7 @@ export default function HomePage() {
 
   const personal = accounts.filter((a) => a.account.kind === "personal");
   const totalPersonal = personal.reduce((s, a) => s + a.stats.balance, 0);
+  const transfersToReview = accounts.length > 1 ? transferOverview(db).review.length : 0;
 
   return (
     <>
@@ -31,7 +33,19 @@ export default function HomePage() {
       {personal.length > 1 ? (
         <p className="mb-4 text-sm text-ink-2">
           Combined personal balance <span className="font-semibold text-ink tabular">{formatMoney(totalPersonal)}</span>
+          {" · "}
+          <Link href="/combined" className="font-medium text-accent hover:underline">
+            Combined dashboard
+          </Link>
         </p>
+      ) : null}
+      {transfersToReview ? (
+        <Notice tone="warning" className="mb-4">
+          <span className="font-medium text-ink">{transfersToReview} transactions</span> you categorised yourself go to or come from one of your own accounts.{" "}
+          <Link href="/transfers" className="font-medium text-accent hover:underline">
+            Review them
+          </Link>
+        </Notice>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {accounts.map(({ account, stats, lastImport }) => (
@@ -44,8 +58,8 @@ export default function HomePage() {
                 <p className="mt-0.5 truncate text-xs text-muted">{account.iban ? formatIban(account.iban) : "No IBAN yet"}</p>
               </div>
               <Badge tone={account.kind === "business" ? "accent" : "neutral"}>
-                {account.kind === "business" ? <BriefcaseBusiness className="size-3" aria-hidden /> : <Wallet className="size-3" aria-hidden />}
-                {account.kind === "business" ? "Business" : "Personal"}
+                {account.kind === "business" ? <BriefcaseBusiness className="size-3" aria-hidden /> : account.isSavings ? <PiggyBank className="size-3" aria-hidden /> : <Wallet className="size-3" aria-hidden />}
+                {account.kind === "business" ? "Business" : account.isSavings ? "Savings" : "Personal"}
               </Badge>
             </div>
             <p className="mt-4 text-2xl font-semibold tracking-tight text-ink">{formatMoney(stats.balance)}</p>

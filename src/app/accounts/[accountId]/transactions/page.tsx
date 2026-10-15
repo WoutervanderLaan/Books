@@ -104,7 +104,7 @@ export default async function TransactionsPage({ params, searchParams }: PagePro
       <Card>
         <TransactionTable
           rows={rows}
-          categories={categories.map((c) => ({ id: c.id, name: c.name, groupName: c.groupName, vatCode: c.vatCode }))}
+          categories={categories.map((c) => ({ id: c.id, name: c.name, groupName: c.groupName, kind: c.kind, vatCode: c.vatCode }))}
           business={account.kind === "business"}
           accountId={account.id}
         />

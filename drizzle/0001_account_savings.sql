@@ -1,0 +1,1 @@
+ALTER TABLE `accounts` ADD `is_savings` integer DEFAULT false NOT NULL;

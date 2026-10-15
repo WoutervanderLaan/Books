@@ -40,6 +40,8 @@ export const accounts = sqliteTable("accounts", {
   autoBalance: integer("auto_balance", { mode: "boolean" }).notNull().default(true),
   /** Business only: registered for the small business VAT scheme (KOR). */
   vatKor: integer("vat_kor", { mode: "boolean" }).notNull().default(false),
+  /** Personal only: a savings account; its balance change counts as "put aside" in the combined view. */
+  isSavings: integer("is_savings", { mode: "boolean" }).notNull().default(false),
   csvMapping: text("csv_mapping", { mode: "json" }).$type<CsvMapping>(),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   createdAt: createdAt(),

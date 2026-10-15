@@ -40,6 +40,15 @@ export function AccountSettingsForm({ account }: { account: Account }) {
               </Field>
             ) : null}
           </fieldset>
+          {account.kind === "personal" ? (
+            <label className="flex items-start gap-2 text-sm text-ink">
+              <input type="checkbox" name="isSavings" defaultChecked={account.isSavings} className="mt-1" />
+              <span>
+                This is a savings account
+                <span className="block text-xs text-muted">Money moved here counts as &quot;put aside&quot; on the combined dashboard.</span>
+              </span>
+            </label>
+          ) : null}
           {account.kind === "business" ? (
             <label className="flex items-start gap-2 text-sm text-ink">
               <input type="checkbox" name="vatKor" defaultChecked={account.vatKor} className="mt-1" />

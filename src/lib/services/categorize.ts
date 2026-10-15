@@ -1,9 +1,12 @@
 import { and, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { DB } from "../db/connection";
 import { accounts, categories, rules, transactions, type Account, type Rule } from "../db/schema";
+import type { CategoryKind } from "../types";
 import {
   detectOwnTransfer,
   findMatchingRule,
+  kindFitsAmount,
+  ruleFitsSign,
   ruleMatches,
   sortRules,
   suggestRule,
@@ -15,22 +18,25 @@ export interface RuleContext {
   rules: Rule[];
   accounts: AccountLike[];
   categories: CategoryLike[];
+  kinds: Map<number, CategoryKind>;
 }
 
 export function loadRuleContext(db: DB): RuleContext {
+  const cats = db
+    .select({
+      id: categories.id,
+      kind: categories.kind,
+      scope: categories.scope,
+      role: categories.role,
+      archived: categories.archived,
+    })
+    .from(categories)
+    .all();
   return {
     rules: sortRules(db.select().from(rules).where(eq(rules.enabled, true)).all()),
     accounts: db.select({ id: accounts.id, kind: accounts.kind, iban: accounts.iban }).from(accounts).all(),
-    categories: db
-      .select({
-        id: categories.id,
-        kind: categories.kind,
-        scope: categories.scope,
-        role: categories.role,
-        archived: categories.archived,
-      })
-      .from(categories)
-      .all(),
+    categories: cats,
+    kinds: new Map(cats.map((c) => [c.id, c.kind])),
   };
 }
 
@@ -50,7 +56,7 @@ export interface Categorisation {
 export function categorise(tx: TxForRules, account: AccountLike, ctx: RuleContext): Categorisation | null {
   const transfer = detectOwnTransfer(tx, account, ctx.accounts, ctx.categories);
   if (transfer) return { categoryId: transfer, source: "transfer", ruleId: null, vatCode: null };
-  const rule = findMatchingRule(ctx.rules, tx, account);
+  const rule = findMatchingRule(ctx.rules, tx, account, ctx.kinds);
   if (rule) return { categoryId: rule.categoryId, source: "rule", ruleId: rule.id, vatCode: rule.vatCode };
   return null;
 }
@@ -140,6 +146,11 @@ export function setCategoryManually(
   if (!remember || categoryId == null) return { rule: null, applied: 0 };
   const suggestion = suggestRule(row);
   if (!suggestion) return { rule: null, applied: 0 };
+  const kinds = new Map(db.select({ id: categories.id, kind: categories.kind }).from(categories).all().map((c) => [c.id, c.kind]));
+  const kind = kinds.get(categoryId);
+  // A refund (money in for an expense category, or the reverse) gets its own
+  // rule with an explicit direction, next to the payee's regular rule.
+  const direction = kind && !kindFitsAmount(kind, row.amount) ? (row.amount >= 0 ? "in" : "out") : null;
 
   const same = (col: typeof rules.counterpartyContains | typeof rules.descriptionContains | typeof rules.counterpartyIban, v: string | null) =>
     v == null ? isNull(col) : eq(col, v);
@@ -152,7 +163,7 @@ export function setCategoryManually(
         same(rules.counterpartyContains, suggestion.counterpartyContains),
         same(rules.descriptionContains, suggestion.descriptionContains),
         same(rules.counterpartyIban, suggestion.counterpartyIban),
-        isNull(rules.direction),
+        direction ? eq(rules.direction, direction) : isNull(rules.direction),
         isNull(rules.amountMin),
         isNull(rules.amountMax),
       ),
@@ -163,7 +174,7 @@ export function setCategoryManually(
     ? db.update(rules).set({ categoryId, enabled: true }).where(eq(rules.id, existing.id)).returning().get()
     : db
         .insert(rules)
-        .values({ ...suggestion, accountId: account.id, categoryId, source: "auto", timesApplied: 1 })
+        .values({ ...suggestion, direction, accountId: account.id, categoryId, source: "auto", timesApplied: 1 })
         .returning()
         .get();
 
@@ -179,7 +190,7 @@ export function setCategoryManually(
       ),
     )
     .all()
-    .filter((t) => t.categorySource !== "manual" && ruleMatches(rule, t));
+    .filter((t) => t.categorySource !== "manual" && ruleMatches(rule, t) && ruleFitsSign(rule, t, kinds));
 
   if (candidates.length) {
     db.update(transactions)

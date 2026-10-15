@@ -92,7 +92,13 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           label={business ? "Result (incl. VAT)" : t.net >= 0 ? "Saved" : "Overspent"}
           value={formatMoney(business ? t.net : Math.abs(t.net), { whole: true })}
           delta={delta(t.net, p?.net, true, prevLabel)}
-          hint={business ? "Before tax payments and private withdrawals" : undefined}
+          hint={
+            business
+              ? "Before tax payments and private withdrawals"
+              : data.toSavings
+                ? `${data.toSavings > 0 ? "Moved to savings" : "Taken from savings"}: ${formatMoney(Math.abs(data.toSavings), { whole: true })}`
+                : undefined
+          }
         />
         <SavingsRateTile totals={t} previous={p} label={business ? "Margin" : "Savings rate"} hint={business ? "Result as share of money in" : "Share of income not spent"} />
       </div>

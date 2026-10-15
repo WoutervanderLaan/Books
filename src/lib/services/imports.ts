@@ -8,6 +8,7 @@ import { normalizeIban } from "../text";
 import type { CsvMapping } from "../types";
 import { syncOpeningBalance, updateAccount } from "./accounts";
 import { applyRules, categorise, loadRuleContext } from "./categorize";
+import { relinkOwnTransfers } from "./transfers";
 
 export type RowStatus = "new" | "duplicate" | "possible_duplicate";
 
@@ -202,7 +203,11 @@ export function commitImport(
 
   const account = db.select().from(accounts).where(eq(accounts.id, accountId)).get();
   const fileIbans = [...new Set(parsed.transactions.map((t) => t.accountIban).filter(Boolean))];
-  if (account && !account.iban && fileIbans.length === 1) updateAccount(db, accountId, { iban: fileIbans[0] });
+  if (account && !account.iban && fileIbans.length === 1) {
+    updateAccount(db, accountId, { iban: fileIbans[0] });
+    // Other accounts' transfers to this IBAN are now recognisable as own transfers.
+    relinkOwnTransfers(db);
+  }
   if (opts.mapping) updateAccount(db, accountId, { csvMapping: opts.mapping });
 
   return {

@@ -90,9 +90,32 @@ export function sortRules<R extends RuleLike>(rules: R[]): R[] {
   );
 }
 
-export function findMatchingRule<R extends RuleLike>(sortedRules: R[], tx: TxLike, account: AccountLike): R | null {
+/** Whether a category kind makes sense for money in (amount ≥ 0) or out. Transfers fit both. */
+export function kindFitsAmount(kind: CategoryKind, amount: number): boolean {
+  if (kind === "transfer") return true;
+  return kind === "income" ? amount >= 0 : amount < 0;
+}
+
+/**
+ * Whether a rule may assign its category to this transaction. A rule without an
+ * explicit direction only fires when its category fits the sign, so a salary rule
+ * doesn't catch a payment to your employer. Rules with a direction (e.g. refunds
+ * into an expense category) are taken at their word.
+ */
+export function ruleFitsSign(rule: Pick<RuleLike, "direction" | "categoryId">, tx: Pick<TxLike, "amount">, kinds?: Map<number, CategoryKind>): boolean {
+  if (rule.direction != null || !kinds) return true;
+  const kind = kinds.get(rule.categoryId);
+  return !kind || kindFitsAmount(kind, tx.amount);
+}
+
+export function findMatchingRule<R extends RuleLike>(
+  sortedRules: R[],
+  tx: TxLike,
+  account: AccountLike,
+  kinds?: Map<number, CategoryKind>,
+): R | null {
   for (const rule of sortedRules) {
-    if (ruleAppliesTo(rule, account) && ruleMatches(rule, tx)) return rule;
+    if (ruleAppliesTo(rule, account) && ruleMatches(rule, tx) && ruleFitsSign(rule, tx, kinds)) return rule;
   }
   return null;
 }

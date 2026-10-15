@@ -160,7 +160,7 @@ b("2025-02-11", -290400, "Coolblue B.V.", "MacBook Pro 14", null);
 
 // --- Write -------------------------------------------------------------------------------
 const personal = createAccount(db, { name: "ING Betaalrekening", kind: "personal", iban: PERSONAL_IBAN });
-createAccount(db, { name: "Spaarrekening", kind: "personal", iban: SAVINGS_IBAN, description: "Savings" });
+createAccount(db, { name: "Spaarrekening", kind: "personal", iban: SAVINGS_IBAN, description: "Savings", isSavings: true });
 const business = createAccount(db, { name: "Knab Zakelijk", kind: "business", iban: BUSINESS_IBAN });
 
 const cat = (name: string, scope: "personal" | "business") =>
