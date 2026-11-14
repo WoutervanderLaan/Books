@@ -179,3 +179,7 @@ npm run db:generate  # after changing src/lib/db/schema.ts: creates a migration 
 ```
 
 Money is stored as integer cents and dates as `YYYY-MM-DD` strings. Amounts are shown in Dutch notation.
+
+### Test
+
+For test purposes
