@@ -29,7 +29,10 @@ export interface ParseOptions {
   savedMapping?: CsvMapping | null;
 }
 
-export function readCsvRows(text: string, delimiter?: string): { rows: string[][]; delimiter: string } {
+export function readCsvRows(
+  text: string,
+  delimiter?: string,
+): { rows: string[][]; delimiter: string } {
   const parsed = Papa.parse<string[]>(text, {
     delimiter: delimiter ?? "",
     skipEmptyLines: "greedy",
@@ -43,7 +46,9 @@ function finish(format: string, formatLabel: string, txs: ParsedTransaction[]): 
   const warnings: string[] = [];
   const currencies = new Set(transactions.map((t) => t.currency));
   if ([...currencies].some((c) => c !== "EUR")) {
-    warnings.push(`Non-EUR currencies found (${[...currencies].join(", ")}); amounts are used as-is.`);
+    warnings.push(
+      `Non-EUR currencies found (${[...currencies].join(", ")}); amounts are used as-is.`,
+    );
   }
   return {
     format,
@@ -69,7 +74,11 @@ export function parseStatement(buf: Uint8Array, options: ParseOptions = {}): Par
   if (!rows.length) throw new ImportError("The file is empty.");
 
   if (options.mapping) {
-    const mapping = { ...options.mapping, delimiter, signature: fileSignature(rows, options.mapping.hasHeader) };
+    const mapping = {
+      ...options.mapping,
+      delimiter,
+      signature: fileSignature(rows, options.mapping.hasHeader),
+    };
     return { ...finish("csv", "CSV (custom mapping)", parseWithMapping(rows, mapping)), mapping };
   }
 
@@ -79,7 +88,9 @@ export function parseStatement(buf: Uint8Array, options: ParseOptions = {}): Par
     try {
       return finish(preset.id, preset.label, preset.parse(rows, headerIndex));
     } catch (e) {
-      throw new ImportError(`Looks like ${preset.label}, but a row could not be read: ${(e as Error).message}`);
+      throw new ImportError(
+        `Looks like ${preset.label}, but a row could not be read: ${(e as Error).message}`,
+      );
     }
   }
 

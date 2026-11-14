@@ -11,8 +11,12 @@ const nextArgs = args.filter((a) => a !== "--demo");
 const env = { ...process.env, NEXT_TELEMETRY_DISABLED: "1" };
 if (demo) env.FINANCE_DATA_DIR = path.resolve("demo-data");
 
-const child = spawn(process.execPath, [path.join("node_modules", "next", "dist", "bin", "next"), ...nextArgs], {
-  stdio: "inherit",
-  env,
-});
+const child = spawn(
+  process.execPath,
+  [path.join("node_modules", "next", "dist", "bin", "next"), ...nextArgs],
+  {
+    stdio: "inherit",
+    env,
+  },
+);
 child.on("exit", (code) => process.exit(code ?? 0));

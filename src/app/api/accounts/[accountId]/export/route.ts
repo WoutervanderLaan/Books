@@ -25,7 +25,19 @@ export function GET(_req: Request, ctx: RouteContext<"/api/accounts/[accountId]/
       .where(eq(transactions.accountId, account.id))
       .orderBy(asc(transactions.date), asc(transactions.id))
       .all();
-    const header = ["Date", "Amount", "Counterparty", "Counterparty IBAN", "Description", "Category", "Group", "VAT code", "VAT amount", "Invoice date", "Note"];
+    const header = [
+      "Date",
+      "Amount",
+      "Counterparty",
+      "Counterparty IBAN",
+      "Description",
+      "Category",
+      "Group",
+      "VAT code",
+      "VAT amount",
+      "Invoice date",
+      "Note",
+    ];
     const lines = rows.map(({ tx, category, group }) =>
       [
         tx.date,

@@ -34,16 +34,30 @@ export interface PeriodOption {
 }
 
 /** Resolves a period key relative to the latest month with data (imports lag behind today). */
-export function resolvePeriod(key: string | undefined, range: { first: string; last: string } | null): Period {
+export function resolvePeriod(
+  key: string | undefined,
+  range: { first: string; last: string } | null,
+): Period {
   const anchor = range?.last ?? currentMonth();
   const k = key ?? "12m";
-  if (k === "ytd") return { key: k, label: `${anchor.slice(0, 4)} to date`, months: monthsBetween(`${anchor.slice(0, 4)}-01`, anchor) };
-  if (k === "all" && range) return { key: k, label: "All time", months: monthsBetween(range.first, range.last) };
+  if (k === "ytd")
+    return {
+      key: k,
+      label: `${anchor.slice(0, 4)} to date`,
+      months: monthsBetween(`${anchor.slice(0, 4)}-01`, anchor),
+    };
+  if (k === "all" && range)
+    return { key: k, label: "All time", months: monthsBetween(range.first, range.last) };
   const year = k.match(/^year-(\d{4})$/);
-  if (year) return { key: k, label: year[1], months: monthsBetween(`${year[1]}-01`, `${year[1]}-12`) };
+  if (year)
+    return { key: k, label: year[1], months: monthsBetween(`${year[1]}-01`, `${year[1]}-12`) };
   const month = k.match(/^month-(\d{4}-\d{2})$/);
   if (month) return { key: k, label: formatMonth(month[1]), months: [month[1]] };
-  return { key: "12m", label: "Last 12 months", months: monthsBetween(addMonths(anchor, -11), anchor) };
+  return {
+    key: "12m",
+    label: "Last 12 months",
+    months: monthsBetween(addMonths(anchor, -11), anchor),
+  };
 }
 
 export function periodOptions(range: { first: string; last: string } | null): PeriodOption[] {
@@ -55,7 +69,8 @@ export function periodOptions(range: { first: string; last: string } | null): Pe
   for (let m = range.last, i = 0; m >= range.first && i < 6; m = addMonths(m, -1), i++) {
     options.push({ key: `month-${m}`, label: formatMonth(m) });
   }
-  for (let y = yearOf(range.last); y >= yearOf(range.first); y--) options.push({ key: `year-${y}`, label: String(y) });
+  for (let y = yearOf(range.last); y >= yearOf(range.first); y--)
+    options.push({ key: `year-${y}`, label: String(y) });
   options.push({ key: "all", label: "All time" });
   return options;
 }
@@ -88,7 +103,13 @@ export function dashboardData(db: DB, account: Account, periodKey?: string) {
   const inPrevious = all.filter((t) => prevSet.has(monthOf(t.date)));
 
   // A single month still gets a year of context in the trend chart.
-  const chartMonths = period.months.length >= 6 ? period.months : monthsBetween(addMonths(period.months[period.months.length - 1], -11), period.months[period.months.length - 1]);
+  const chartMonths =
+    period.months.length >= 6
+      ? period.months
+      : monthsBetween(
+          addMonths(period.months[period.months.length - 1], -11),
+          period.months[period.months.length - 1],
+        );
   const lines = listBudgetLines(db, account.id);
   const roles = new Map(cats.map((c) => [c.id, c.role]));
   const savingsIbans = new Set(
@@ -110,7 +131,9 @@ export function dashboardData(db: DB, account: Account, periodKey?: string) {
     budget: lines.length ? budgetVsActual(lines, all, map, period.months) : [],
     hasBudget: lines.length > 0,
     balance: balanceByMonth(all, account.openingBalance, chartMonths),
-    recurring: detectRecurring(all, map).filter((r) => r.active).slice(0, 8),
+    recurring: detectRecurring(all, map)
+      .filter((r) => r.active)
+      .slice(0, 8),
     topCounterparties: topCounterparties(inPeriod, map, 8),
     uncategorised: inPeriod.filter((t) => t.categoryId == null).length,
     transactionCount: inPeriod.length,
@@ -148,7 +171,9 @@ export type TrendsData = ReturnType<typeof trendsData>;
  */
 export function combinedData(db: DB, periodKey?: string) {
   const included = listAccounts(db).filter((a) => a.kind === "personal");
-  const ownIbans = new Set(included.map((a) => normalizeIban(a.iban)).filter((i): i is string => !!i));
+  const ownIbans = new Set(
+    included.map((a) => normalizeIban(a.iban)).filter((i): i is string => !!i),
+  );
   const cats = allCategories(db);
   const map = catMap(cats);
   const roles = new Map(cats.map((c) => [c.id, c.role]));
@@ -162,22 +187,37 @@ export function combinedData(db: DB, periodKey?: string) {
   const period = resolvePeriod(periodKey, range);
   const monthSet = new Set(period.months);
   const prevSet = new Set(previousMonths(period.months));
-  const inMonths = <T extends { date: string }>(rows: T[], set: Set<string>) => rows.filter((t) => set.has(monthOf(t.date)));
+  const inMonths = <T extends { date: string }>(rows: T[], set: Set<string>) =>
+    rows.filter((t) => set.has(monthOf(t.date)));
   const inPeriod = inMonths(external, monthSet);
   const inPrevious = inMonths(external, prevSet);
-  const chartMonths = period.months.length >= 6 ? period.months : monthsBetween(addMonths(period.months[period.months.length - 1], -11), period.months[period.months.length - 1]);
+  const chartMonths =
+    period.months.length >= 6
+      ? period.months
+      : monthsBetween(
+          addMonths(period.months[period.months.length - 1], -11),
+          period.months[period.months.length - 1],
+        );
   const opening = included.reduce((s, a) => s + a.openingBalance, 0);
   const savings = included
     .filter((a) => a.isSavings)
     .map((a) => {
       const own = raw.filter((t) => t.accountId === a.id);
-      return { id: a.id, iban: a.iban, first: own[0]?.date ?? null, last: own[own.length - 1]?.date ?? null };
+      return {
+        id: a.id,
+        iban: a.iban,
+        first: own[0]?.date ?? null,
+        last: own[own.length - 1]?.date ?? null,
+      };
     });
   const savedIn = (set: Set<string>) => putAside(inMonths(raw, set), roles, savings, ownIbans);
 
   return {
     accounts: included.map((a) => {
-      const own = inMonths(raw.filter((t) => t.accountId === a.id), monthSet);
+      const own = inMonths(
+        raw.filter((t) => t.accountId === a.id),
+        monthSet,
+      );
       const ext = own.filter((t) => !isInternal(t, ownIbans)).map(toRow);
       const tot = totals(ext, map);
       return {

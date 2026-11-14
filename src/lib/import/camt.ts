@@ -37,8 +37,7 @@ const dateOf = (node: any): string => {
   return v.slice(0, 10);
 };
 
-const partyName = (party: any): string =>
-  text(party?.Nm) || text(party?.Pty?.Nm) || "";
+const partyName = (party: any): string => text(party?.Nm) || text(party?.Pty?.Nm) || "";
 
 const partyIban = (acct: any): string | null =>
   normalizeIban(text(acct?.Id?.IBAN) || text(acct?.Id?.Othr?.Id));
@@ -67,7 +66,8 @@ export function parseCamt(xml: string): ParseResult {
         const { cents } = amountOf(bal.Amt);
         const signed = text(bal.CdtDbtInd) === "DBIT" ? -cents : cents;
         const date = dateOf(bal.Dt);
-        if (!closingBalance || date >= closingBalance.date) closingBalance = { date, amount: signed };
+        if (!closingBalance || date >= closingBalance.date)
+          closingBalance = { date, amount: signed };
       }
     }
 
@@ -81,15 +81,16 @@ export function parseCamt(xml: string): ParseResult {
       const details: any[] = ntry.NtryDtls?.TxDtls ?? [];
       const tx = details[0] ?? {};
       const parties = tx.RltdPties ?? {};
-      const counterparty = debit ? parties.Cdtr ?? parties.UltmtCdtr : parties.Dbtr ?? parties.UltmtDbtr;
+      const counterparty = debit
+        ? (parties.Cdtr ?? parties.UltmtCdtr)
+        : (parties.Dbtr ?? parties.UltmtDbtr);
       const counterAcct = debit ? parties.CdtrAcct : parties.DbtrAcct;
 
       const remittance = details
         .flatMap((d) => (d.RmtInf?.Ustrd ?? []).map(text))
         .concat(details.map((d) => text(d.RmtInf?.Strd?.CdtrRefInf?.Ref)))
         .filter(Boolean);
-      const description =
-        remittance.join(" ") || text(tx.AddtlTxInf) || text(ntry.AddtlNtryInf);
+      const description = remittance.join(" ") || text(tx.AddtlTxInf) || text(ntry.AddtlNtryInf);
       const subFamily = text(ntry.BkTxCd?.Domn?.Fmly?.SubFmlyCd);
 
       transactions.push({
@@ -100,7 +101,8 @@ export function parseCamt(xml: string): ParseResult {
         counterpartyIban: partyIban(counterAcct),
         description: collapseWhitespace(description),
         txType: TX_TYPES[subFamily] ?? (text(ntry.BkTxCd?.Prtry?.Cd) || null),
-        externalId: text(ntry.AcctSvcrRef) || text(ntry.NtryRef) || text(tx.Refs?.AcctSvcrRef) || null,
+        externalId:
+          text(ntry.AcctSvcrRef) || text(ntry.NtryRef) || text(tx.Refs?.AcctSvcrRef) || null,
         balanceAfter: null,
         accountIban,
       });

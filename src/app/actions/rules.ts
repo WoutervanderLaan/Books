@@ -9,17 +9,25 @@ import { normalizeIban } from "@/lib/text";
 import { VAT_CODES, type VatCode } from "@/lib/types";
 import { refreshAll } from "./revalidate";
 
-export async function saveRuleAction(accountId: number, ruleId: number | null, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function saveRuleAction(
+  accountId: number,
+  ruleId: number | null,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const categoryId = optInt(fd, "categoryId");
   if (!categoryId) return { ok: false, error: "Choose a category." };
   const values = {
     counterpartyContains: optStr(fd, "counterpartyContains")?.toLowerCase() ?? null,
     descriptionContains: optStr(fd, "descriptionContains")?.toLowerCase() ?? null,
     counterpartyIban: normalizeIban(optStr(fd, "counterpartyIban")),
-    direction: (oneOf(str(fd, "direction"), ["in", "out", ""] as const, "") || null) as "in" | "out" | null,
+    direction: (oneOf(str(fd, "direction"), ["in", "out", ""] as const, "") || null) as
+      "in" | "out" | null,
     amountMin: optMoney(fd, "amountMin"),
     amountMax: optMoney(fd, "amountMax"),
-    vatCode: (VAT_CODES as readonly string[]).includes(str(fd, "vatCode")) ? (str(fd, "vatCode") as VatCode) : null,
+    vatCode: (VAT_CODES as readonly string[]).includes(str(fd, "vatCode"))
+      ? (str(fd, "vatCode") as VatCode)
+      : null,
     priority: optInt(fd, "priority") ?? 0,
     categoryId,
   };
@@ -30,11 +38,21 @@ export async function saveRuleAction(accountId: number, ruleId: number | null, _
     const db = getDb();
     const scope = str(fd, "scope");
     const account = scope === "all" ? { accountId: null } : { accountId };
-    if (ruleId) db.update(rules).set({ ...values, ...account }).where(eq(rules.id, ruleId)).run();
-    else db.insert(rules).values({ ...values, ...account, source: "user" }).run();
+    if (ruleId)
+      db.update(rules)
+        .set({ ...values, ...account })
+        .where(eq(rules.id, ruleId))
+        .run();
+    else
+      db.insert(rules)
+        .values({ ...values, ...account, source: "user" })
+        .run();
     const changed = applyRules(db, accountId);
     refreshAll();
-    return { ok: true, message: `Rule saved${changed ? `; ${changed} transaction${changed === 1 ? "" : "s"} categorised` : ""}.` };
+    return {
+      ok: true,
+      message: `Rule saved${changed ? `; ${changed} transaction${changed === 1 ? "" : "s"} categorised` : ""}.`,
+    };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -50,7 +68,10 @@ export async function toggleRuleAction(ruleId: number, enabled: boolean): Promis
   refreshAll();
 }
 
-export async function reapplyRulesAction(accountId: number, overwrite: boolean): Promise<ActionResult> {
+export async function reapplyRulesAction(
+  accountId: number,
+  overwrite: boolean,
+): Promise<ActionResult> {
   const changed = applyRules(getDb(), accountId, { overwrite });
   refreshAll();
   return { ok: true, message: `${changed} transaction${changed === 1 ? "" : "s"} updated.` };

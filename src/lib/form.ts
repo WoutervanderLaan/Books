@@ -4,7 +4,8 @@ export type ActionResult = { ok: true; message?: string } | { ok: false; error: 
 
 export const str = (fd: FormData, key: string): string => (fd.get(key) ?? "").toString().trim();
 export const optStr = (fd: FormData, key: string): string | null => str(fd, key) || null;
-export const bool = (fd: FormData, key: string): boolean => ["on", "true", "1", "yes"].includes(str(fd, key));
+export const bool = (fd: FormData, key: string): boolean =>
+  ["on", "true", "1", "yes"].includes(str(fd, key));
 
 export function optInt(fd: FormData, key: string): number | null {
   const v = str(fd, key);

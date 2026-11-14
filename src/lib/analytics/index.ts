@@ -34,7 +34,10 @@ export interface BudgetRow {
 export type Flow = "income" | "expense" | "transfer";
 
 /** Income/expense/transfer for a transaction; uncategorised ones go by sign. */
-export function flowOf(tx: { amount: number; categoryId: number | null }, cats: Map<number, CatRow>): Flow {
+export function flowOf(
+  tx: { amount: number; categoryId: number | null },
+  cats: Map<number, CatRow>,
+): Flow {
   const cat = tx.categoryId != null ? cats.get(tx.categoryId) : undefined;
   if (!cat) return tx.amount >= 0 ? "income" : "expense";
   return cat.kind;
@@ -51,8 +54,14 @@ export interface MonthTotals {
 }
 
 /** Income and spending per month. Refunds in an expense category reduce spending. */
-export function monthlyTotals(txs: TxRow[], cats: Map<number, CatRow>, months: string[]): MonthTotals[] {
-  const byMonth = new Map(months.map((m) => [m, { month: m, income: 0, expenses: 0, net: 0, transfers: 0 }]));
+export function monthlyTotals(
+  txs: TxRow[],
+  cats: Map<number, CatRow>,
+  months: string[],
+): MonthTotals[] {
+  const byMonth = new Map(
+    months.map((m) => [m, { month: m, income: 0, expenses: 0, net: 0, transfers: 0 }]),
+  );
   for (const tx of txs) {
     const row = byMonth.get(monthOf(tx.date));
     if (!row) continue;
@@ -94,7 +103,11 @@ export interface CategoryTotal {
   count: number;
 }
 
-export function categoryTotals(txs: TxRow[], cats: Map<number, CatRow>, flow: "income" | "expense"): CategoryTotal[] {
+export function categoryTotals(
+  txs: TxRow[],
+  cats: Map<number, CatRow>,
+  flow: "income" | "expense",
+): CategoryTotal[] {
   const out = new Map<number | null, CategoryTotal>();
   for (const tx of txs) {
     if (flowOf(tx, cats) !== flow) continue;
@@ -121,7 +134,9 @@ export function categoryTotals(txs: TxRow[], cats: Map<number, CatRow>, flow: "i
 export function groupTotals(rows: CategoryTotal[]): { group: string; total: number }[] {
   const m = new Map<string, number>();
   for (const r of rows) m.set(r.group, (m.get(r.group) ?? 0) + r.total);
-  return [...m.entries()].map(([group, total]) => ({ group, total })).sort((a, b) => b.total - a.total);
+  return [...m.entries()]
+    .map(([group, total]) => ({ group, total }))
+    .sort((a, b) => b.total - a.total);
 }
 
 // --- Budgets ---------------------------------------------------------------------
@@ -132,8 +147,13 @@ export function monthlyEquivalent(line: Pick<BudgetRow, "amount" | "frequency">)
   return line.amount;
 }
 
-export function lineActiveIn(line: Pick<BudgetRow, "startMonth" | "endMonth">, month: string): boolean {
-  return (!line.startMonth || month >= line.startMonth) && (!line.endMonth || month <= line.endMonth);
+export function lineActiveIn(
+  line: Pick<BudgetRow, "startMonth" | "endMonth">,
+  month: string,
+): boolean {
+  return (
+    (!line.startMonth || month >= line.startMonth) && (!line.endMonth || month <= line.endMonth)
+  );
 }
 
 export interface BudgetComparison {
@@ -219,7 +239,10 @@ export interface YearRow {
 }
 
 /** Spending per category per calendar year. */
-export function spendingByYear(txs: TxRow[], cats: Map<number, CatRow>): { years: number[]; rows: YearRow[] } {
+export function spendingByYear(
+  txs: TxRow[],
+  cats: Map<number, CatRow>,
+): { years: number[]; rows: YearRow[] } {
   const years = new Set<number>();
   const rows = new Map<number | null, YearRow>();
   for (const tx of txs) {
@@ -230,7 +253,12 @@ export function spendingByYear(txs: TxRow[], cats: Map<number, CatRow>): { years
     const key = cat?.id ?? null;
     let row = rows.get(key);
     if (!row) {
-      row = { categoryId: key, name: cat?.name ?? "Uncategorised", group: cat?.groupName ?? "Uncategorised", byYear: {} };
+      row = {
+        categoryId: key,
+        name: cat?.name ?? "Uncategorised",
+        group: cat?.groupName ?? "Uncategorised",
+        byYear: {},
+      };
       rows.set(key, row);
     }
     row.byYear[year] = (row.byYear[year] ?? 0) - tx.amount;
@@ -239,7 +267,10 @@ export function spendingByYear(txs: TxRow[], cats: Map<number, CatRow>): { years
 }
 
 /** Spending per month-of-year for each year, for overlaying years in one chart. */
-export function monthlySpendingByYear(txs: TxRow[], cats: Map<number, CatRow>): { years: number[]; data: Record<string, number>[] } {
+export function monthlySpendingByYear(
+  txs: TxRow[],
+  cats: Map<number, CatRow>,
+): { years: number[]; data: Record<string, number>[] } {
   const years = [...new Set(txs.map((t) => yearOf(t.date)))].sort();
   const data = Array.from({ length: 12 }, (_, i) => ({ month: i + 1 }) as Record<string, number>);
   for (const tx of txs) {
@@ -261,7 +292,11 @@ export interface CategoryChange {
 }
 
 /** Last 12 months vs the 12 months before, per expense category. */
-export function rollingYearChanges(txs: TxRow[], cats: Map<number, CatRow>, lastMonth: string): CategoryChange[] {
+export function rollingYearChanges(
+  txs: TxRow[],
+  cats: Map<number, CatRow>,
+  lastMonth: string,
+): CategoryChange[] {
   const currentFrom = addMonths(lastMonth, -11);
   const previousFrom = addMonths(lastMonth, -23);
   const previousTo = addMonths(lastMonth, -12);
@@ -276,7 +311,14 @@ export function rollingYearChanges(txs: TxRow[], cats: Map<number, CatRow>, last
     const key = cat?.id ?? null;
     let row = rows.get(key);
     if (!row) {
-      row = { categoryId: key, name: cat?.name ?? "Uncategorised", current: 0, previous: 0, change: 0, changePct: null };
+      row = {
+        categoryId: key,
+        name: cat?.name ?? "Uncategorised",
+        current: 0,
+        previous: 0,
+        change: 0,
+        changePct: null,
+      };
       rows.set(key, row);
     }
     if (inCurrent) row.current -= tx.amount;
@@ -347,7 +389,8 @@ export function detectRecurring(txs: TxRow[], cats: Map<number, CatRow>): Recurr
     const byDay: TxRow[] = [];
     for (const tx of sorted) {
       const last = byDay[byDay.length - 1];
-      if (last && last.date === tx.date) byDay[byDay.length - 1] = { ...last, amount: last.amount + tx.amount };
+      if (last && last.date === tx.date)
+        byDay[byDay.length - 1] = { ...last, amount: last.amount + tx.amount };
       else byDay.push(tx);
     }
     if (byDay.length < 3) continue;
@@ -355,7 +398,8 @@ export function detectRecurring(txs: TxRow[], cats: Map<number, CatRow>): Recurr
     const typical = median(gaps);
     const spec = CADENCES.find((c) => typical >= c.min && typical <= c.max);
     if (!spec) continue;
-    const regular = gaps.filter((g) => g >= spec.min * 0.8 && g <= spec.max * 1.2).length / gaps.length;
+    const regular =
+      gaps.filter((g) => g >= spec.min * 0.8 && g <= spec.max * 1.2).length / gaps.length;
     if (regular < 0.7) continue;
     const amounts = byDay.map((t) => -t.amount);
     const avg = amounts.reduce((s, a) => s + a, 0) / amounts.length;
@@ -382,7 +426,9 @@ export function detectRecurring(txs: TxRow[], cats: Map<number, CatRow>): Recurr
       active: daysBetween(last.date, latest) <= spec.days * 1.6,
     });
   }
-  return result.sort((a, b) => Number(b.active) - Number(a.active) || b.monthlyCost - a.monthlyCost);
+  return result.sort(
+    (a, b) => Number(b.active) - Number(a.active) || b.monthlyCost - a.monthlyCost,
+  );
 }
 
 // --- Counterparties & balance ----------------------------------------------------
@@ -392,7 +438,11 @@ export function topCounterparties(txs: TxRow[], cats: Map<number, CatRow>, limit
   for (const tx of txs) {
     if (flowOf(tx, cats) !== "expense") continue;
     const key = counterpartyKey(tx);
-    const row = m.get(key) ?? { name: tx.counterpartyName || tx.description.slice(0, 40) || "Unknown", total: 0, count: 0 };
+    const row = m.get(key) ?? {
+      name: tx.counterpartyName || tx.description.slice(0, 40) || "Unknown",
+      total: 0,
+      count: 0,
+    };
     row.total -= tx.amount;
     row.count += 1;
     m.set(key, row);
@@ -401,7 +451,11 @@ export function topCounterparties(txs: TxRow[], cats: Map<number, CatRow>, limit
 }
 
 /** Month-end balance, from the opening balance plus all transactions. */
-export function balanceByMonth(txs: TxRow[], openingBalance: number, months: string[]): { month: string; balance: number }[] {
+export function balanceByMonth(
+  txs: TxRow[],
+  openingBalance: number,
+  months: string[],
+): { month: string; balance: number }[] {
   if (!months.length) return [];
   const sorted = [...txs].sort((a, b) => (a.date < b.date ? -1 : 1));
   let balance = openingBalance;

@@ -18,5 +18,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `src/lib/db/index.ts` is `server-only`; scripts and tests import `src/lib/db/connection.ts` instead.
 - Mutations go through server actions in `src/app/actions/*` and end with `refreshAll()`.
 - Schema change: edit `src/lib/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/`.
-- Checks before committing: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+- Checks before committing (also run in CI, `.github/workflows/ci.yml`): `npm run format:check`, `npm test`,
+  `npm run typecheck`, `npm run lint`, `npm run build`. Run `npm run format` to fix formatting.
 - Never commit `data/` or `demo-data/` (personal financial data).

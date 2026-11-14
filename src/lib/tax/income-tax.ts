@@ -33,7 +33,11 @@ export interface AssetLike {
 }
 
 /** Straight-line depreciation for one calendar year, pro rata per month from the purchase month. */
-export function depreciationForYear(asset: AssetLike, year: number, minAssetValueCents: number): number {
+export function depreciationForYear(
+  asset: AssetLike,
+  year: number,
+  minAssetValueCents: number,
+): number {
   const purchaseYear = yearOf(asset.purchaseDate);
   if (year < purchaseYear) return 0;
   if (asset.cost < minAssetValueCents) return year === purchaseYear ? asset.cost : 0;
@@ -55,9 +59,14 @@ export function depreciationForYear(asset: AssetLike, year: number, minAssetValu
   return Math.round(perMonth * (before + months)) - Math.round(perMonth * before);
 }
 
-export function bookValueAtEndOf(asset: AssetLike, year: number, minAssetValueCents: number): number {
+export function bookValueAtEndOf(
+  asset: AssetLike,
+  year: number,
+  minAssetValueCents: number,
+): number {
   let value = asset.cost;
-  for (let y = yearOf(asset.purchaseDate); y <= year; y++) value -= depreciationForYear(asset, y, minAssetValueCents);
+  for (let y = yearOf(asset.purchaseDate); y <= year; y++)
+    value -= depreciationForYear(asset, y, minAssetValueCents);
   return value;
 }
 
@@ -69,11 +78,16 @@ export function kiaAmount(totalInvestmentCents: number, p: NlTaxParams): number 
   if (total < k.minTotal) euros = 0;
   else if (total <= k.pctUpTo) euros = total * k.pct;
   else if (total <= k.fixedUpTo) euros = k.fixed;
-  else if (total < k.zeroFrom) euros = Math.max(0, k.fixed - (total - k.fixedUpTo) * k.decreaseRate);
+  else if (total < k.zeroFrom)
+    euros = Math.max(0, k.fixed - (total - k.fixedUpTo) * k.decreaseRate);
   return toCents(euros);
 }
 
-export function qualifyingInvestments(assets: AssetLike[], year: number, p: NlTaxParams): AssetLike[] {
+export function qualifyingInvestments(
+  assets: AssetLike[],
+  year: number,
+  p: NlTaxParams,
+): AssetLike[] {
   return assets.filter(
     (a) => a.kiaEligible && yearOf(a.purchaseDate) === year && a.cost >= toCents(p.minAssetValue),
   );
@@ -167,7 +181,10 @@ export function profitAndLoss(
     lines.set(tx.categoryId, line);
   }
 
-  const toGroups = (m: Map<TaxGroup, Map<number, PnlLine>>, field: "amount" | "deductible"): PnlGroup[] =>
+  const toGroups = (
+    m: Map<TaxGroup, Map<number, PnlLine>>,
+    field: "amount" | "deductible",
+  ): PnlGroup[] =>
     [...m.entries()].map(([group, lines]) => {
       const list = [...lines.values()].sort((a, b) => b.amount - a.amount);
       return { group, lines: list, total: list.reduce((s, l) => s + l[field], 0) };
@@ -233,7 +250,10 @@ export interface IncomeTaxEstimate {
 function box1(incomeEuros: number, labourIncomeEuros: number, p: NlTaxParams) {
   const gross = piecewise(Math.max(0, incomeEuros), p.box1);
   const ahk = p.algemeneHeffingskorting;
-  const general = Math.min(ahk.max, Math.max(0, ahk.max - Math.max(0, incomeEuros - ahk.phaseOutFrom) * ahk.phaseOutRate));
+  const general = Math.min(
+    ahk.max,
+    Math.max(0, ahk.max - Math.max(0, incomeEuros - ahk.phaseOutFrom) * ahk.phaseOutRate),
+  );
   const labour = Math.max(0, piecewise(Math.max(0, labourIncomeEuros), p.arbeidskorting));
   const credits = Math.min(gross, general + labour);
   const generalUsed = Math.min(general, gross);
@@ -254,7 +274,9 @@ export function estimateIncomeTax(input: IncomeTaxInput): IncomeTaxEstimate {
   let zelfstandigenaftrek = 0;
   let startersaftrek = 0;
   if (input.hoursCriterionMet) {
-    zelfstandigenaftrek = input.isStarter ? p.zelfstandigenaftrek : Math.min(p.zelfstandigenaftrek, Math.max(0, fiscalProfit));
+    zelfstandigenaftrek = input.isStarter
+      ? p.zelfstandigenaftrek
+      : Math.min(p.zelfstandigenaftrek, Math.max(0, fiscalProfit));
     startersaftrek = input.isStarter ? p.startersaftrek : 0;
   }
   const profitAfterDeductions = fiscalProfit - zelfstandigenaftrek - startersaftrek;

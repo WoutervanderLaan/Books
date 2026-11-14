@@ -2,7 +2,22 @@ import Link from "next/link";
 import { PiggyBank, Wallet } from "lucide-react";
 import { BalanceChart, CashflowChart } from "@/components/charts";
 import { PeriodSelect } from "@/components/period-select";
-import { Amount, Card, CardBody, CardHeader, EmptyState, LinkButton, Notice, PageHeader, StatTile, Table, td, tdNum, th, thNum } from "@/components/ui";
+import {
+  Amount,
+  Card,
+  CardBody,
+  CardHeader,
+  EmptyState,
+  LinkButton,
+  Notice,
+  PageHeader,
+  StatTile,
+  Table,
+  td,
+  tdNum,
+  th,
+  thNum,
+} from "@/components/ui";
 import type { CategoryTotal } from "@/lib/analytics";
 import { formatMoney, formatPercent } from "@/lib/format";
 import { getDb } from "@/lib/server";
@@ -28,7 +43,10 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
     return (
       <>
         <PageHeader title="All personal accounts" />
-        <EmptyState title="No transactions yet" action={<LinkButton href="/accounts/new">Add an account</LinkButton>}>
+        <EmptyState
+          title="No transactions yet"
+          action={<LinkButton href="/accounts/new">Add an account</LinkButton>}
+        >
           Import statements for your personal accounts to see them combined here.
         </EmptyState>
       </>
@@ -50,13 +68,22 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
 
         {data.uncategorised > 0 ? (
           <Notice tone="warning">
-            <span className="font-medium text-ink">{data.uncategorised} transactions</span> in this period aren&apos;t categorised yet, so the figures below are incomplete.
+            <span className="font-medium text-ink">{data.uncategorised} transactions</span> in this
+            period aren&apos;t categorised yet, so the figures below are incomplete.
           </Notice>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatTile label="Income" value={formatMoney(t.income, { whole: true })} delta={delta(t.income, p?.income, true)} />
-          <StatTile label="Spending" value={formatMoney(t.expenses, { whole: true })} delta={delta(t.expenses, p?.expenses, false)} />
+          <StatTile
+            label="Income"
+            value={formatMoney(t.income, { whole: true })}
+            delta={delta(t.income, p?.income, true)}
+          />
+          <StatTile
+            label="Spending"
+            value={formatMoney(t.expenses, { whole: true })}
+            delta={delta(t.expenses, p?.expenses, false)}
+          />
           <StatTile
             label={t.net >= 0 ? "Income left over" : "Spent more than earned"}
             value={formatMoney(Math.abs(t.net), { whole: true })}
@@ -65,7 +92,11 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
           />
           <StatTile
             label="Put aside in savings"
-            value={data.hasSavingsAccount || data.putAside ? formatMoney(data.putAside, { whole: true }) : "—"}
+            value={
+              data.hasSavingsAccount || data.putAside
+                ? formatMoney(data.putAside, { whole: true })
+                : "—"
+            }
             delta={delta(data.putAside, data.previousPutAside, true)}
             hint={
               data.hasSavingsAccount ? (
@@ -80,7 +111,10 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
         </div>
 
         <Card>
-          <CardHeader title="Accounts" description={`${data.period.label}. Transfers are money moved to (−) or from (+) your other accounts.`} />
+          <CardHeader
+            title="Accounts"
+            description={`${data.period.label}. Transfers are money moved to (−) or from (+) your other accounts.`}
+          />
           <Table>
             <thead>
               <tr>
@@ -95,8 +129,15 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
               {data.accounts.map((a) => (
                 <tr key={a.account.id}>
                   <td className={td}>
-                    <Link href={`/accounts/${a.account.id}`} className="flex items-center gap-2 hover:underline">
-                      {a.account.isSavings ? <PiggyBank className="size-3.5 text-muted" aria-hidden /> : <Wallet className="size-3.5 text-muted" aria-hidden />}
+                    <Link
+                      href={`/accounts/${a.account.id}`}
+                      className="flex items-center gap-2 hover:underline"
+                    >
+                      {a.account.isSavings ? (
+                        <PiggyBank className="size-3.5 text-muted" aria-hidden />
+                      ) : (
+                        <Wallet className="size-3.5 text-muted" aria-hidden />
+                      )}
                       {a.account.name}
                     </Link>
                   </td>
@@ -115,14 +156,19 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
                 <td className={`${td} text-right`}>
                   <Amount cents={data.accounts.reduce((s, a) => s + a.internal, 0)} whole />
                 </td>
-                <td className={tdNum}>{formatMoney(data.accounts.reduce((s, a) => s + a.balance, 0), { whole: true })}</td>
+                <td className={tdNum}>
+                  {formatMoney(
+                    data.accounts.reduce((s, a) => s + a.balance, 0),
+                    { whole: true },
+                  )}
+                </td>
               </tr>
             </tbody>
           </Table>
           {data.accounts.reduce((s, a) => s + a.internal, 0) !== 0 ? (
             <p className="px-5 py-3 text-xs text-muted">
-              Transfers don&apos;t add up to zero: some appear in only one account, usually because the other account&apos;s statements for that
-              period aren&apos;t imported yet.{" "}
+              Transfers don&apos;t add up to zero: some appear in only one account, usually because
+              the other account&apos;s statements for that period aren&apos;t imported yet.{" "}
               <Link className="text-accent hover:underline" href="/transfers">
                 Check own transfers
               </Link>
@@ -131,7 +177,10 @@ export default async function CombinedPage({ searchParams }: PageProps<"/combine
         </Card>
 
         <Card>
-          <CardHeader title="Income and spending per month" description="All personal accounts together, transfers between them left out." />
+          <CardHeader
+            title="Income and spending per month"
+            description="All personal accounts together, transfers between them left out."
+          />
           <CardBody>
             <CashflowChart data={data.monthly} />
           </CardBody>
@@ -186,7 +235,13 @@ function Bars({ rows, empty }: { rows: CategoryTotal[]; empty: string }) {
   if (!positive.length) return <p className="text-sm text-muted">{empty}</p>;
   const top = positive.slice(0, 10);
   const rest = positive.slice(10).reduce((s, r) => s + r.total, 0);
-  const list = rest > 0 ? [...top, { categoryId: -1, name: `Other (${positive.length - 10})`, total: rest } as CategoryTotal] : top;
+  const list =
+    rest > 0
+      ? [
+          ...top,
+          { categoryId: -1, name: `Other (${positive.length - 10})`, total: rest } as CategoryTotal,
+        ]
+      : top;
   const total = positive.reduce((s, r) => s + r.total, 0);
   const max = Math.max(...list.map((r) => r.total));
   return (
@@ -196,11 +251,15 @@ function Bars({ rows, empty }: { rows: CategoryTotal[]; empty: string }) {
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="truncate text-ink">{r.name}</span>
             <span className="shrink-0 text-ink tabular">
-              {formatMoney(r.total, { whole: true })} <span className="text-xs text-muted">{formatPercent(r.total / total)}</span>
+              {formatMoney(r.total, { whole: true })}{" "}
+              <span className="text-xs text-muted">{formatPercent(r.total / total)}</span>
             </span>
           </div>
           <div className="mt-1 h-2 rounded-full bg-surface-2">
-            <div className="h-2 rounded-full" style={{ width: `${(r.total / max) * 100}%`, background: "var(--series-1)" }} />
+            <div
+              className="h-2 rounded-full"
+              style={{ width: `${(r.total / max) * 100}%`, background: "var(--series-1)" }}
+            />
           </div>
         </li>
       ))}

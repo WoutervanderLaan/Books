@@ -1,7 +1,15 @@
 "use server";
 
 import { describeRule } from "@/lib/rules/engine";
-import { errorMessage, isIsoDate, optInt, optMoney, optStr, str, type ActionResult } from "@/lib/form";
+import {
+  errorMessage,
+  isIsoDate,
+  optInt,
+  optMoney,
+  optStr,
+  str,
+  type ActionResult,
+} from "@/lib/form";
 import { getDb } from "@/lib/server";
 import { setCategoryManually } from "@/lib/services/categorize";
 import {
@@ -13,19 +21,29 @@ import {
 import { VAT_CODES, type VatCode } from "@/lib/types";
 import { refreshAll } from "./revalidate";
 
-export async function setCategoryAction(transactionId: number, categoryId: number | null, remember: boolean): Promise<ActionResult> {
+export async function setCategoryAction(
+  transactionId: number,
+  categoryId: number | null,
+  remember: boolean,
+): Promise<ActionResult> {
   try {
     const { rule, applied } = setCategoryManually(getDb(), transactionId, categoryId, remember);
     refreshAll();
     if (!rule) return { ok: true };
-    const more = applied ? `, also applied to ${applied} other transaction${applied === 1 ? "" : "s"}` : "";
+    const more = applied
+      ? `, also applied to ${applied} other transaction${applied === 1 ? "" : "s"}`
+      : "";
     return { ok: true, message: `Remembered: ${describeRule(rule)}${more}.` };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
 }
 
-export async function updateTransactionAction(transactionId: number, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function updateTransactionAction(
+  transactionId: number,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const vat = str(fd, "vatCode");
   const taxDate = str(fd, "taxDate");
   if (taxDate && !isIsoDate(taxDate)) return { ok: false, error: "Invoice date must be a date." };
@@ -39,11 +57,16 @@ export async function updateTransactionAction(transactionId: number, _prev: Acti
   return { ok: true, message: "Saved." };
 }
 
-export async function addManualTransactionAction(accountId: number, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function addManualTransactionAction(
+  accountId: number,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const date = str(fd, "date");
   const amount = optMoney(fd, "amount");
   if (!isIsoDate(date)) return { ok: false, error: "Enter a date." };
-  if (amount == null || amount === 0) return { ok: false, error: "Enter an amount (negative for money out)." };
+  if (amount == null || amount === 0)
+    return { ok: false, error: "Enter an amount (negative for money out)." };
   const direction = str(fd, "direction");
   const signed = direction === "out" ? -Math.abs(amount) : Math.abs(amount);
   const vat = str(fd, "vatCode");

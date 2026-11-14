@@ -4,7 +4,12 @@ import { budgetLines, type BudgetLine } from "../db/schema";
 import type { BudgetFrequency, BudgetType } from "../types";
 
 export function listBudgetLines(db: DB, accountId: number): BudgetLine[] {
-  return db.select().from(budgetLines).where(eq(budgetLines.accountId, accountId)).orderBy(asc(budgetLines.id)).all();
+  return db
+    .select()
+    .from(budgetLines)
+    .where(eq(budgetLines.accountId, accountId))
+    .orderBy(asc(budgetLines.id))
+    .all();
 }
 
 export interface BudgetLineInput {

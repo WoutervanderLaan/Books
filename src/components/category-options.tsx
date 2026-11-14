@@ -24,12 +24,21 @@ export function CategoryOptions({ categories, amount }: { categories: Choice[]; 
   if (amount == null) {
     groups = grouped(categories, (g) => g);
   } else {
-    const fits = (c: Choice) => !c.kind || (c.kind !== "transfer" && kindFitsAmount(c.kind, amount));
+    const fits = (c: Choice) =>
+      !c.kind || (c.kind !== "transfer" && kindFitsAmount(c.kind, amount));
     const prefix = amount >= 0 ? "Refund · " : "Paid back · ";
     groups = [
       ...grouped(categories.filter(fits), (g) => g),
-      ...grouped(categories.filter((c) => c.kind === "transfer"), (g) => g),
-      ...grouped(categories.filter((c) => c.kind && c.kind !== "transfer" && !kindFitsAmount(c.kind, amount)), (g) => prefix + g),
+      ...grouped(
+        categories.filter((c) => c.kind === "transfer"),
+        (g) => g,
+      ),
+      ...grouped(
+        categories.filter(
+          (c) => c.kind && c.kind !== "transfer" && !kindFitsAmount(c.kind, amount),
+        ),
+        (g) => prefix + g,
+      ),
     ];
   }
   return (

@@ -3,7 +3,16 @@
 import { useActionState } from "react";
 import { updateTaxYearAction } from "@/app/actions/tax";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
-import { Card, CardBody, CardHeader, Field, Input, Notice, Select, Textarea } from "@/components/ui";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Field,
+  Input,
+  Notice,
+  Select,
+  Textarea,
+} from "@/components/ui";
 import type { TaxYear } from "@/lib/db/schema";
 import type { ParamUnit } from "@/lib/tax/params";
 
@@ -40,10 +49,17 @@ export function TaxSettingsForm({
         <CardHeader title={`Your situation in ${year}`} />
         <CardBody className="grid gap-4 sm:grid-cols-2">
           <label className="flex items-start gap-2 text-sm text-ink sm:col-span-2">
-            <input type="checkbox" name="isStarter" defaultChecked={taxYear.isStarter} className="mt-1" />
+            <input
+              type="checkbox"
+              name="isStarter"
+              defaultChecked={taxYear.isStarter}
+              className="mt-1"
+            />
             <span>
               I qualify for the starter deduction (startersaftrek)
-              <span className="block text-xs text-muted">Max. 3 times in the first 5 years as an entrepreneur.</span>
+              <span className="block text-xs text-muted">
+                Max. 3 times in the first 5 years as an entrepreneur.
+              </span>
             </span>
           </label>
           <Field label="Hours criterion" hint="“Automatic” uses the hours you logged">
@@ -53,10 +69,20 @@ export function TaxSettingsForm({
               <option value="no">Not met</option>
             </Select>
           </Field>
-          <Field label="Other box 1 income (€)" hint="E.g. salary from employment, for the tax brackets">
-            <Input name="otherIncome" inputMode="decimal" defaultValue={euros(taxYear.otherIncome)} />
+          <Field
+            label="Other box 1 income (€)"
+            hint="E.g. salary from employment, for the tax brackets"
+          >
+            <Input
+              name="otherIncome"
+              inputMode="decimal"
+              defaultValue={euros(taxYear.otherIncome)}
+            />
           </Field>
-          <Field label="Income tax already paid elsewhere (€)" hint="Provisional assessments paid from another account">
+          <Field
+            label="Income tax already paid elsewhere (€)"
+            hint="Provisional assessments paid from another account"
+          >
             <Input name="prepaidTax" inputMode="decimal" defaultValue={euros(taxYear.prepaidTax)} />
           </Field>
           <Field label="Notes" className="sm:col-span-2">
@@ -72,8 +98,10 @@ export function TaxSettingsForm({
         />
         <CardBody className="space-y-4">
           <Notice tone={status === "provisional" ? "warning" : "neutral"}>
-            {status === "provisional" ? `Provisional values. ${note ?? ""}` : "Built-in values based on published rates for this year."} Always check
-            the current figures on belastingdienst.nl.
+            {status === "provisional"
+              ? `Provisional values. ${note ?? ""}`
+              : "Built-in values based on published rates for this year."}{" "}
+            Always check the current figures on belastingdienst.nl.
           </Notice>
           <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {fields.map((f) => {
@@ -84,7 +112,12 @@ export function TaxSettingsForm({
                   label={`${f.label}${f.unit === "pct" ? " (%)" : f.unit === "eur" ? " (€)" : ""}`}
                   hint={changed ? `Built-in: ${display(f.builtIn, f.unit)}` : undefined}
                 >
-                  <Input name={`param:${f.path}`} inputMode="decimal" defaultValue={display(f.value, f.unit)} className={changed ? "border-accent" : undefined} />
+                  <Input
+                    name={`param:${f.path}`}
+                    inputMode="decimal"
+                    defaultValue={display(f.value, f.unit)}
+                    className={changed ? "border-accent" : undefined}
+                  />
                 </Field>
               );
             })}

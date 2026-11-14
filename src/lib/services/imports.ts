@@ -38,7 +38,12 @@ export interface ImportPreview {
   rows: PreviewRow[];
 }
 
-const looseKey = (t: { date: string; amount: number; counterpartyIban: string | null; counterpartyName: string | null }) =>
+const looseKey = (t: {
+  date: string;
+  amount: number;
+  counterpartyIban: string | null;
+  counterpartyName: string | null;
+}) =>
   `${t.date}|${t.amount}|${normalizeIban(t.counterpartyIban) ?? merchantKey(t.counterpartyName)}`;
 
 function classify(db: DB, accountId: number, parsed: ParseResult) {
@@ -65,7 +70,8 @@ function classify(db: DB, accountId: number, parsed: ParseResult) {
     : [];
   const existingKeys = new Set(existing.map((e) => e.dedupeKey));
   const existingLoose = new Map<string, number>();
-  for (const e of existing) existingLoose.set(looseKey(e), (existingLoose.get(looseKey(e)) ?? 0) + 1);
+  for (const e of existing)
+    existingLoose.set(looseKey(e), (existingLoose.get(looseKey(e)) ?? 0) + 1);
 
   // Each existing row can explain at most one incoming row: exact matches claim theirs first.
   const used = new Map<string, number>();
@@ -91,7 +97,13 @@ export function previewImport(db: DB, accountId: number, parsed: ParseResult): I
   if (!account) throw new Error("Account not found");
   const { statuses } = classify(db, accountId, parsed);
   const ctx = loadRuleContext(db);
-  const names = new Map(db.select({ id: categories.id, name: categories.name }).from(categories).all().map((c) => [c.id, c.name]));
+  const names = new Map(
+    db
+      .select({ id: categories.id, name: categories.name })
+      .from(categories)
+      .all()
+      .map((c) => [c.id, c.name]),
+  );
 
   let categorisedCount = 0;
   const rows: PreviewRow[] = parsed.transactions.map((t, i) => {
@@ -103,11 +115,13 @@ export function previewImport(db: DB, accountId: number, parsed: ParseResult): I
       counterpartyName: t.counterpartyName,
       description: t.description,
       status: statuses[i],
-      category: result ? names.get(result.categoryId) ?? null : null,
+      category: result ? (names.get(result.categoryId) ?? null) : null,
     };
   });
 
-  const fileIbans = [...new Set(parsed.transactions.map((t) => t.accountIban).filter((v): v is string => !!v))];
+  const fileIbans = [
+    ...new Set(parsed.transactions.map((t) => t.accountIban).filter((v): v is string => !!v)),
+  ];
   return {
     format: parsed.format,
     formatLabel: parsed.formatLabel,
@@ -221,7 +235,12 @@ export function commitImport(
 }
 
 export function listImports(db: DB, accountId: number): ImportRecord[] {
-  return db.select().from(imports).where(eq(imports.accountId, accountId)).orderBy(desc(imports.id)).all();
+  return db
+    .select()
+    .from(imports)
+    .where(eq(imports.accountId, accountId))
+    .orderBy(desc(imports.id))
+    .all();
 }
 
 /** Removes an import and the transactions it created. */

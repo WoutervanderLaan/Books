@@ -5,7 +5,8 @@ import { isParseResult, parseStatement, type ParseResult } from "@/lib/import";
 import { dedupeKeys } from "@/lib/import/dedupe";
 import { parseAmount, parseDate } from "@/lib/import/util";
 
-const fixture = (name: string) => new Uint8Array(fs.readFileSync(path.join(__dirname, "fixtures", name)));
+const fixture = (name: string) =>
+  new Uint8Array(fs.readFileSync(path.join(__dirname, "fixtures", name)));
 
 function parse(name: string): ParseResult {
   const outcome = parseStatement(fixture(name));
@@ -93,7 +94,11 @@ describe("ABN AMRO TXT", () => {
   it("parses card, structured and labelled descriptions", () => {
     expect(r.format).toBe("abnamro");
     const [card, sepa, labelled] = r.transactions;
-    expect(card).toMatchObject({ amount: -2450, counterpartyName: "ALBERT HEIJN 1234", txType: "Betaalautomaat" });
+    expect(card).toMatchObject({
+      amount: -2450,
+      counterpartyName: "ALBERT HEIJN 1234",
+      txType: "Betaalautomaat",
+    });
     expect(sepa).toMatchObject({
       amount: 250000,
       counterpartyName: "ACME BV",
@@ -114,7 +119,10 @@ describe("bunq CSV", () => {
     const r = parse("bunq.csv");
     expect(r.format).toBe("bunq");
     expect(r.transactions[0]).toMatchObject({ amount: -999, counterpartyName: "Netflix" });
-    expect(r.transactions[1]).toMatchObject({ amount: 150000, counterpartyIban: "NL91ABNA0417164300" });
+    expect(r.transactions[1]).toMatchObject({
+      amount: 150000,
+      counterpartyIban: "NL91ABNA0417164300",
+    });
   });
 });
 
@@ -122,7 +130,11 @@ describe("Knab CSV", () => {
   it("skips the title line and applies debit/credit", () => {
     const r = parse("knab.csv");
     expect(r.format).toBe("knab");
-    expect(r.transactions[0]).toMatchObject({ date: "2024-01-15", amount: -12100, counterpartyName: "Moneybird B.V." });
+    expect(r.transactions[0]).toMatchObject({
+      date: "2024-01-15",
+      amount: -12100,
+      counterpartyName: "Moneybird B.V.",
+    });
     expect(r.transactions[1]).toMatchObject({ amount: 242000, externalId: "REF124" });
   });
 });
@@ -173,7 +185,11 @@ describe("MT940", () => {
       description: "Huur februari",
       accountIban: "NL69INGB0123456789",
     });
-    expect(r.transactions[1]).toMatchObject({ amount: 235050, counterpartyName: "ACME BV", description: "Factuur 2024-001" });
+    expect(r.transactions[1]).toMatchObject({
+      amount: 235050,
+      counterpartyName: "ACME BV",
+      description: "Factuur 2024-001",
+    });
     expect(r.closingBalance).toEqual({ date: "2024-01-31", amount: 210050 });
   });
 });

@@ -4,13 +4,26 @@ import { eq } from "drizzle-orm";
 import { categories } from "@/lib/db/schema";
 import { errorMessage, oneOf, optInt, str, type ActionResult } from "@/lib/form";
 import { getDb } from "@/lib/server";
-import { CATEGORY_KINDS, CATEGORY_ROLES, CATEGORY_SCOPES, TAX_GROUPS, VAT_CODES, type CategoryRole, type TaxGroup, type VatCode } from "@/lib/types";
+import {
+  CATEGORY_KINDS,
+  CATEGORY_ROLES,
+  CATEGORY_SCOPES,
+  TAX_GROUPS,
+  VAT_CODES,
+  type CategoryRole,
+  type TaxGroup,
+  type VatCode,
+} from "@/lib/types";
 import { refreshAll } from "./revalidate";
 
 const maybe = <T extends string>(v: string, options: readonly T[]): T | null =>
   (options as readonly string[]).includes(v) ? (v as T) : null;
 
-export async function saveCategoryAction(categoryId: number | null, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function saveCategoryAction(
+  categoryId: number | null,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const name = str(fd, "name");
   const groupName = str(fd, "groupName");
   if (!name || !groupName) return { ok: false, error: "Name and group are required." };
@@ -27,7 +40,10 @@ export async function saveCategoryAction(categoryId: number | null, _prev: Actio
   try {
     const db = getDb();
     if (categoryId) db.update(categories).set(values).where(eq(categories.id, categoryId)).run();
-    else db.insert(categories).values({ ...values, sortOrder: 10_000 }).run();
+    else
+      db.insert(categories)
+        .values({ ...values, sortOrder: 10_000 })
+        .run();
     refreshAll();
     return { ok: true, message: categoryId ? "Category updated." : "Category added." };
   } catch (e) {

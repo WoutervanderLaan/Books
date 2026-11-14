@@ -122,24 +122,60 @@ const badgeTones: Record<Tone, string> = {
   critical: "bg-surface-2 text-critical-text",
 };
 
-export function Badge({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+export function Badge({
+  tone = "neutral",
+  children,
+  className,
+}: {
+  tone?: Tone;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium", badgeTones[tone], className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium",
+        badgeTones[tone],
+        className,
+      )}
+    >
       {children}
     </span>
   );
 }
 
 /** Signed amount: money in gets a "+" and the success ink; money out stays neutral. */
-export function Amount({ cents, className, whole }: { cents: number; className?: string; whole?: boolean }) {
+export function Amount({
+  cents,
+  className,
+  whole,
+}: {
+  cents: number;
+  className?: string;
+  whole?: boolean;
+}) {
   return (
-    <span className={cn("tabular whitespace-nowrap", cents > 0 ? "text-good-text" : "text-ink", className)}>
+    <span
+      className={cn(
+        "tabular whitespace-nowrap",
+        cents > 0 ? "text-good-text" : "text-ink",
+        className,
+      )}
+    >
       {formatMoney(cents, { sign: true, whole })}
     </span>
   );
 }
 
-export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
@@ -151,7 +187,15 @@ export function PageHeader({ title, description, actions }: { title: ReactNode; 
   );
 }
 
-export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong px-6 py-12 text-center">
       <p className="text-[15px] font-semibold text-ink">{title}</p>
@@ -161,7 +205,15 @@ export function EmptyState({ title, children, action }: { title: string; childre
   );
 }
 
-export function Notice({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+export function Notice({
+  tone = "neutral",
+  children,
+  className,
+}: {
+  tone?: Tone;
+  children: ReactNode;
+  className?: string;
+}) {
   const bar: Record<Tone, string> = {
     neutral: "border-l-axis",
     accent: "border-l-accent",
@@ -170,7 +222,13 @@ export function Notice({ tone = "neutral", children, className }: { tone?: Tone;
     critical: "border-l-critical",
   };
   return (
-    <div className={cn("rounded-lg border border-line border-l-4 bg-surface px-4 py-3 text-sm text-ink-2", bar[tone], className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-line border-l-4 bg-surface px-4 py-3 text-sm text-ink-2",
+        bar[tone],
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -196,7 +254,11 @@ export function StatTile({
         <p
           className={cn(
             "mt-1 text-xs font-medium",
-            delta.good == null ? "text-muted" : delta.good ? "text-good-text" : "text-critical-text",
+            delta.good == null
+              ? "text-muted"
+              : delta.good
+                ? "text-good-text"
+                : "text-critical-text",
           )}
         >
           {delta.text}
@@ -211,7 +273,17 @@ export function StatTile({
  * Horizontal meter. "budget": share of a limit used, over budget turns critical.
  * "goal": progress towards a target, reaching it turns good.
  */
-export function Meter({ value, max, label, kind = "budget" }: { value: number; max: number; label: string; kind?: "budget" | "goal" }) {
+export function Meter({
+  value,
+  max,
+  label,
+  kind = "budget",
+}: {
+  value: number;
+  max: number;
+  label: string;
+  kind?: "budget" | "goal";
+}) {
   const ratio = max > 0 ? value / max : value > 0 ? 2 : 0;
   const width = Math.max(0, Math.min(1, ratio)) * 100;
   const color =
@@ -247,7 +319,8 @@ export function Table({ children, className }: { children: ReactNode; className?
   );
 }
 
-export const th = "border-b border-line px-3 py-2 text-left text-xs font-medium text-muted first:pl-5 last:pr-5";
+export const th =
+  "border-b border-line px-3 py-2 text-left text-xs font-medium text-muted first:pl-5 last:pr-5";
 export const td = "border-b border-line px-3 py-2.5 align-middle text-ink first:pl-5 last:pr-5";
 export const tdNum = cn(td, "text-right tabular");
 export const thNum = cn(th, "text-right");

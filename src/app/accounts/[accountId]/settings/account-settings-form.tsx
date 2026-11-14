@@ -28,33 +28,63 @@ export function AccountSettingsForm({ account }: { account: Account }) {
           <fieldset className="space-y-2">
             <legend className="text-[13px] font-medium text-ink-2">Balance</legend>
             <label className="flex items-start gap-2 text-sm text-ink">
-              <input type="checkbox" name="autoBalance" checked={auto} onChange={(e) => setAuto(e.target.checked)} className="mt-1" />
+              <input
+                type="checkbox"
+                name="autoBalance"
+                checked={auto}
+                onChange={(e) => setAuto(e.target.checked)}
+                className="mt-1"
+              />
               <span>
                 Keep the balance in sync with my bank statements
-                <span className="block text-xs text-muted">Uses the balance in the imported file (most formats include it).</span>
+                <span className="block text-xs text-muted">
+                  Uses the balance in the imported file (most formats include it).
+                </span>
               </span>
             </label>
             {!auto ? (
-              <Field label="Opening balance (€)" hint="Balance before the oldest imported transaction" className="max-w-xs">
-                <Input name="openingBalance" inputMode="decimal" defaultValue={(account.openingBalance / 100).toFixed(2).replace(".", ",")} />
+              <Field
+                label="Opening balance (€)"
+                hint="Balance before the oldest imported transaction"
+                className="max-w-xs"
+              >
+                <Input
+                  name="openingBalance"
+                  inputMode="decimal"
+                  defaultValue={(account.openingBalance / 100).toFixed(2).replace(".", ",")}
+                />
               </Field>
             ) : null}
           </fieldset>
           {account.kind === "personal" ? (
             <label className="flex items-start gap-2 text-sm text-ink">
-              <input type="checkbox" name="isSavings" defaultChecked={account.isSavings} className="mt-1" />
+              <input
+                type="checkbox"
+                name="isSavings"
+                defaultChecked={account.isSavings}
+                className="mt-1"
+              />
               <span>
                 This is a savings account
-                <span className="block text-xs text-muted">Money moved here counts as &quot;put aside&quot; on the combined dashboard.</span>
+                <span className="block text-xs text-muted">
+                  Money moved here counts as &quot;put aside&quot; on the combined dashboard.
+                </span>
               </span>
             </label>
           ) : null}
           {account.kind === "business" ? (
             <label className="flex items-start gap-2 text-sm text-ink">
-              <input type="checkbox" name="vatKor" defaultChecked={account.vatKor} className="mt-1" />
+              <input
+                type="checkbox"
+                name="vatKor"
+                defaultChecked={account.vatKor}
+                className="mt-1"
+              />
               <span>
                 I use the small business scheme (KOR)
-                <span className="block text-xs text-muted">No VAT is charged or reclaimed; costs count including VAT.</span>
+                <span className="block text-xs text-muted">
+                  No VAT is charged or reclaimed; costs count including VAT.
+                </span>
               </span>
             </label>
           ) : null}

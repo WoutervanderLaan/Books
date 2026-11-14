@@ -15,7 +15,9 @@ export interface Connection {
 
 export function getDataDir(): string {
   // The data directory is chosen at runtime; keep it out of the build's file tracing.
-  return path.resolve(/*turbopackIgnore: true*/ process.env.FINANCE_DATA_DIR ?? path.join(process.cwd(), "data"));
+  return path.resolve(
+    /*turbopackIgnore: true*/ process.env.FINANCE_DATA_DIR ?? path.join(process.cwd(), "data"),
+  );
 }
 
 export function getDbPath(): string {

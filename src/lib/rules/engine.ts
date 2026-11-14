@@ -1,5 +1,13 @@
 import { containsWords, normalizeIban, normalizeText } from "../text";
-import type { AccountKind, CategoryKind, CategoryRole, CategoryScope, Direction, RuleSource, VatCode } from "../types";
+import type {
+  AccountKind,
+  CategoryKind,
+  CategoryRole,
+  CategoryScope,
+  Direction,
+  RuleSource,
+  VatCode,
+} from "../types";
 
 export interface RuleLike {
   id: number;
@@ -60,12 +68,20 @@ export function conditionCount(rule: RuleLike): number {
 /** True when every condition set on the rule matches the transaction. */
 export function ruleMatches(rule: RuleLike, tx: TxLike): boolean {
   if (conditionCount(rule) === 0) return false;
-  if (rule.counterpartyContains && !containsWords(tx.counterpartyName ?? "", rule.counterpartyContains)) return false;
+  if (
+    rule.counterpartyContains &&
+    !containsWords(tx.counterpartyName ?? "", rule.counterpartyContains)
+  )
+    return false;
   if (rule.descriptionContains) {
     const text = `${tx.description} ${tx.txType ?? ""} ${tx.counterpartyName ?? ""}`;
     if (!containsWords(text, rule.descriptionContains)) return false;
   }
-  if (rule.counterpartyIban && normalizeIban(rule.counterpartyIban) !== normalizeIban(tx.counterpartyIban)) return false;
+  if (
+    rule.counterpartyIban &&
+    normalizeIban(rule.counterpartyIban) !== normalizeIban(tx.counterpartyIban)
+  )
+    return false;
   if (rule.direction === "in" && tx.amount < 0) return false;
   if (rule.direction === "out" && tx.amount >= 0) return false;
   const abs = Math.abs(tx.amount);
@@ -79,7 +95,9 @@ const SOURCE_RANK: Record<RuleSource, number> = { user: 2, auto: 2, starter: 1 }
 /** Orders rules by precedence: your own rules first, then priority, then the most specific. */
 export function sortRules<R extends RuleLike>(rules: R[]): R[] {
   const patternLength = (r: RuleLike) =>
-    (r.counterpartyContains?.length ?? 0) + (r.descriptionContains?.length ?? 0) + (r.counterpartyIban ? 30 : 0);
+    (r.counterpartyContains?.length ?? 0) +
+    (r.descriptionContains?.length ?? 0) +
+    (r.counterpartyIban ? 30 : 0);
   return [...rules].sort(
     (a, b) =>
       SOURCE_RANK[b.source] - SOURCE_RANK[a.source] ||
@@ -102,7 +120,11 @@ export function kindFitsAmount(kind: CategoryKind, amount: number): boolean {
  * doesn't catch a payment to your employer. Rules with a direction (e.g. refunds
  * into an expense category) are taken at their word.
  */
-export function ruleFitsSign(rule: Pick<RuleLike, "direction" | "categoryId">, tx: Pick<TxLike, "amount">, kinds?: Map<number, CategoryKind>): boolean {
+export function ruleFitsSign(
+  rule: Pick<RuleLike, "direction" | "categoryId">,
+  tx: Pick<TxLike, "amount">,
+  kinds?: Map<number, CategoryKind>,
+): boolean {
   if (rule.direction != null || !kinds) return true;
   const kind = kinds.get(rule.categoryId);
   return !kind || kindFitsAmount(kind, tx.amount);
@@ -115,7 +137,8 @@ export function findMatchingRule<R extends RuleLike>(
   kinds?: Map<number, CategoryKind>,
 ): R | null {
   for (const rule of sortedRules) {
-    if (ruleAppliesTo(rule, account) && ruleMatches(rule, tx) && ruleFitsSign(rule, tx, kinds)) return rule;
+    if (ruleAppliesTo(rule, account) && ruleMatches(rule, tx) && ruleFitsSign(rule, tx, kinds))
+      return rule;
   }
   return null;
 }
@@ -136,36 +159,124 @@ export function detectOwnTransfer(
   if (!other) return null;
 
   const pick = (scope: AccountKind, role: CategoryRole, kind?: CategoryKind) =>
-    categories.find((c) => !c.archived && c.scope === scope && c.role === role && (!kind || c.kind === kind))?.id ??
-    null;
+    categories.find(
+      (c) => !c.archived && c.scope === scope && c.role === role && (!kind || c.kind === kind),
+    )?.id ?? null;
 
   if (account.kind === other.kind) return pick(account.kind, "internal_transfer");
   if (account.kind === "business") return pick("business", "private");
   // Personal account <-> own business account
-  return tx.amount >= 0 ? pick("personal", "private", "income") : pick("personal", "private", "transfer");
+  return tx.amount >= 0
+    ? pick("personal", "private", "income")
+    : pick("personal", "private", "transfer");
 }
 
 // --- Suggesting a rule from a manual categorisation ---------------------------------
 
 /** Payment providers whose counterparty name says nothing about the actual merchant. */
 const PROCESSORS = [
-  "paypal", "mollie", "adyen", "stripe", "tikkie", "buckaroo", "multisafepay", "klarna",
-  "afterpay", "riverty", "pay nl", "worldline", "icepay", "payvision", "ccv", "sumup", "zettle",
+  "paypal",
+  "mollie",
+  "adyen",
+  "stripe",
+  "tikkie",
+  "buckaroo",
+  "multisafepay",
+  "klarna",
+  "afterpay",
+  "riverty",
+  "pay nl",
+  "worldline",
+  "icepay",
+  "payvision",
+  "ccv",
+  "sumup",
+  "zettle",
 ];
 
 /** Counterparties that receive very different kinds of payments. */
 const MULTI_PURPOSE = ["belastingdienst", "gemeente", "cjib", "duo", "svb", "uwv"];
 
 const LEGAL_SUFFIXES = new Set([
-  "bv", "b", "v", "nv", "n", "vof", "cv", "ltd", "limited", "gmbh", "inc", "llc", "sarl", "sa", "ab", "as", "plc", "ag", "srl",
+  "bv",
+  "b",
+  "v",
+  "nv",
+  "n",
+  "vof",
+  "cv",
+  "ltd",
+  "limited",
+  "gmbh",
+  "inc",
+  "llc",
+  "sarl",
+  "sa",
+  "ab",
+  "as",
+  "plc",
+  "ag",
+  "srl",
 ]);
 
 const STOPWORDS = new Set([
-  "omschrijving", "naam", "iban", "bic", "kenmerk", "betaling", "betalingskenmerk", "machtiging", "id",
-  "incassant", "via", "ref", "referentie", "transactie", "term", "pasvolgnr", "apple", "pay", "google",
-  "valutadatum", "europe", "et", "cie", "nl", "eur", "the", "van", "de", "het", "een", "en", "for", "of",
-  "payment", "order", "bestelling", "factuur", "invoice", "nr", "no", "to", "from", "bij", "voor", "aan",
-  "sca", "s", "a", "r", "l", "c", "www", "com", "https", "online", "ideal", "betaalverzoek",
+  "omschrijving",
+  "naam",
+  "iban",
+  "bic",
+  "kenmerk",
+  "betaling",
+  "betalingskenmerk",
+  "machtiging",
+  "id",
+  "incassant",
+  "via",
+  "ref",
+  "referentie",
+  "transactie",
+  "term",
+  "pasvolgnr",
+  "apple",
+  "pay",
+  "google",
+  "valutadatum",
+  "europe",
+  "et",
+  "cie",
+  "nl",
+  "eur",
+  "the",
+  "van",
+  "de",
+  "het",
+  "een",
+  "en",
+  "for",
+  "of",
+  "payment",
+  "order",
+  "bestelling",
+  "factuur",
+  "invoice",
+  "nr",
+  "no",
+  "to",
+  "from",
+  "bij",
+  "voor",
+  "aan",
+  "sca",
+  "s",
+  "a",
+  "r",
+  "l",
+  "c",
+  "www",
+  "com",
+  "https",
+  "online",
+  "ideal",
+  "betaalverzoek",
   ...PROCESSORS.flatMap((p) => p.split(" ")),
 ]);
 
@@ -215,7 +326,8 @@ export function suggestRule(tx: TxLike): RuleSuggestion | null {
   if (processor) {
     // "PAYPAL *SPOTIFY" carries the merchant in the name; plain "PayPal Europe" doesn't.
     const rest = key.split(" ").filter((t) => !STOPWORDS.has(t) && !LEGAL_SUFFIXES.has(t));
-    if (rest.length) return { counterpartyContains: key, descriptionContains: null, counterpartyIban: null };
+    if (rest.length)
+      return { counterpartyContains: key, descriptionContains: null, counterpartyIban: null };
     const desc = descriptionKey(tx.description);
     if (!desc) return null;
     return { counterpartyContains: processor, descriptionContains: desc, counterpartyIban: null };
@@ -223,24 +335,43 @@ export function suggestRule(tx: TxLike): RuleSuggestion | null {
 
   if (MULTI_PURPOSE.some((m) => ` ${name} `.includes(` ${m} `))) {
     const desc = descriptionKey(tx.description);
-    return { counterpartyContains: key || null, descriptionContains: desc || null, counterpartyIban: null };
+    return {
+      counterpartyContains: key || null,
+      descriptionContains: desc || null,
+      counterpartyIban: null,
+    };
   }
 
   const iban = normalizeIban(tx.counterpartyIban);
-  if (iban) return { counterpartyContains: null, descriptionContains: null, counterpartyIban: iban };
+  if (iban)
+    return { counterpartyContains: null, descriptionContains: null, counterpartyIban: iban };
   if (key) return { counterpartyContains: key, descriptionContains: null, counterpartyIban: null };
   const desc = descriptionKey(tx.description, 3);
-  return desc ? { counterpartyContains: null, descriptionContains: desc, counterpartyIban: null } : null;
+  return desc
+    ? { counterpartyContains: null, descriptionContains: desc, counterpartyIban: null }
+    : null;
 }
 
 /** Grouping key for "the same payee" used by recurring-payment detection. */
 export function counterpartyKey(tx: TxLike): string {
   const s = suggestRule(tx);
   if (!s) return `desc:${normalizeText(tx.description).slice(0, 40)}`;
-  return [s.counterpartyIban ?? "", s.counterpartyContains ?? "", s.descriptionContains ?? ""].join("|");
+  return [s.counterpartyIban ?? "", s.counterpartyContains ?? "", s.descriptionContains ?? ""].join(
+    "|",
+  );
 }
 
-export function describeRule(rule: Pick<RuleLike, "counterpartyContains" | "descriptionContains" | "counterpartyIban" | "direction" | "amountMin" | "amountMax">): string {
+export function describeRule(
+  rule: Pick<
+    RuleLike,
+    | "counterpartyContains"
+    | "descriptionContains"
+    | "counterpartyIban"
+    | "direction"
+    | "amountMin"
+    | "amountMax"
+  >,
+): string {
   const parts: string[] = [];
   if (rule.counterpartyContains) parts.push(`counterparty "${rule.counterpartyContains}"`);
   if (rule.counterpartyIban) parts.push(`IBAN ${rule.counterpartyIban}`);

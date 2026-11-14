@@ -27,7 +27,11 @@ export interface UnmatchedTransfer {
  * opposite sign, a few days apart) and returns legs whose counterpart is missing
  * from the other account although its statements cover that date.
  */
-export function unmatchedTransfers(legs: TransferLeg[], accounts: OwnAccountSpan[], toleranceDays = 4): UnmatchedTransfer[] {
+export function unmatchedTransfers(
+  legs: TransferLeg[],
+  accounts: OwnAccountSpan[],
+  toleranceDays = 4,
+): UnmatchedTransfer[] {
   const byIban = new Map<string, OwnAccountSpan>();
   for (const a of accounts) {
     const iban = normalizeIban(a.iban);
@@ -94,7 +98,9 @@ export function putAside(
   ownIbans: Set<string>,
 ): number {
   const savingsIds = new Set(savings.map((a) => a.id));
-  const savingsByIban = new Map(savings.filter((a) => a.iban).map((a) => [normalizeIban(a.iban)!, a]));
+  const savingsByIban = new Map(
+    savings.filter((a) => a.iban).map((a) => [normalizeIban(a.iban)!, a]),
+  );
   let total = 0;
   for (const tx of txs) {
     if (savingsIds.has(tx.accountId)) {
@@ -103,9 +109,14 @@ export function putAside(
     }
     const target = savingsByIban.get(normalizeIban(tx.counterpartyIban) ?? "");
     if (target) {
-      const covered = !!target.first && !!target.last && tx.date >= target.first && tx.date <= target.last;
+      const covered =
+        !!target.first && !!target.last && tx.date >= target.first && tx.date <= target.last;
       if (!covered) total -= tx.amount;
-    } else if (!isInternal(tx, ownIbans) && tx.categoryId != null && roles.get(tx.categoryId) === "savings") {
+    } else if (
+      !isInternal(tx, ownIbans) &&
+      tx.categoryId != null &&
+      roles.get(tx.categoryId) === "savings"
+    ) {
       total -= tx.amount;
     }
   }
@@ -121,7 +132,11 @@ export function movedToSavings(
   let total = 0;
   for (const tx of txs) {
     const iban = normalizeIban(tx.counterpartyIban);
-    if ((iban && savingsIbans.has(iban)) || (tx.categoryId != null && roles.get(tx.categoryId) === "savings")) total -= tx.amount;
+    if (
+      (iban && savingsIbans.has(iban)) ||
+      (tx.categoryId != null && roles.get(tx.categoryId) === "savings")
+    )
+      total -= tx.amount;
   }
   return total;
 }

@@ -24,11 +24,20 @@ export function SubmitButton({
   );
 }
 
-export function FormMessage({ state, className }: { state: ActionResult | null; className?: string }) {
+export function FormMessage({
+  state,
+  className,
+}: {
+  state: ActionResult | null;
+  className?: string;
+}) {
   if (!state) return null;
   if (state.ok && !state.message) return null;
   return (
-    <p role="status" className={cn("text-sm", state.ok ? "text-good-text" : "text-critical-text", className)}>
+    <p
+      role="status"
+      className={cn("text-sm", state.ok ? "text-good-text" : "text-critical-text", className)}
+    >
       {state.ok ? state.message : state.error}
     </p>
   );

@@ -8,9 +8,20 @@ import { FormMessage, SubmitButton } from "@/components/form-bits";
 import { Button, Field, Input, Select } from "@/components/ui";
 import type { BudgetLine, Category } from "@/lib/db/schema";
 
-export function BudgetLineForm({ accountId, categories, line }: { accountId: number; categories: Category[]; line?: BudgetLine }) {
+export function BudgetLineForm({
+  accountId,
+  categories,
+  line,
+}: {
+  accountId: number;
+  categories: Category[];
+  line?: BudgetLine;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [state, action] = useActionState(saveBudgetLineAction.bind(null, accountId, line?.id ?? null), null);
+  const [state, action] = useActionState(
+    saveBudgetLineAction.bind(null, accountId, line?.id ?? null),
+    null,
+  );
 
   useEffect(() => {
     if (state?.ok) dialog.current?.close();
@@ -27,21 +38,40 @@ export function BudgetLineForm({ accountId, categories, line }: { accountId: num
           <Plus className="size-3.5" aria-hidden /> Add line
         </Button>
       )}
-      <dialog ref={dialog} className="m-auto w-full max-w-lg rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40">
+      <dialog
+        ref={dialog}
+        className="m-auto w-full max-w-lg rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40"
+      >
         <form action={action} className="space-y-4 p-6">
-          <h2 className="text-base font-semibold">{line ? "Edit budget line" : "Add budget line"}</h2>
+          <h2 className="text-base font-semibold">
+            {line ? "Edit budget line" : "Add budget line"}
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Name" className="sm:col-span-2">
-              <Input name="name" required defaultValue={line?.name} placeholder="e.g. Rent, Netflix, Groceries" />
+              <Input
+                name="name"
+                required
+                defaultValue={line?.name}
+                placeholder="e.g. Rent, Netflix, Groceries"
+              />
             </Field>
-            <Field label="Category" hint="Compared with actual spending in this category" className="sm:col-span-2">
+            <Field
+              label="Category"
+              hint="Compared with actual spending in this category"
+              className="sm:col-span-2"
+            >
               <Select name="categoryId" defaultValue={line?.categoryId ?? ""}>
                 <option value="">— Choose —</option>
                 <CategoryOptions categories={categories} />
               </Select>
             </Field>
             <Field label="Amount (€)">
-              <Input name="amount" inputMode="decimal" required defaultValue={line ? (line.amount / 100).toFixed(2).replace(".", ",") : ""} />
+              <Input
+                name="amount"
+                inputMode="decimal"
+                required
+                defaultValue={line ? (line.amount / 100).toFixed(2).replace(".", ",") : ""}
+              />
             </Field>
             <Field label="Per">
               <Select name="frequency" defaultValue={line?.frequency ?? "monthly"}>

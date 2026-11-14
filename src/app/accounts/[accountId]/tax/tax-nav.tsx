@@ -29,7 +29,9 @@ export function TaxNav({ base }: { base: string }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "rounded-full px-3 py-1 text-sm transition-colors",
-              active ? "bg-ink font-medium text-surface" : "bg-surface-2 text-ink-2 hover:bg-surface-3 hover:text-ink",
+              active
+                ? "bg-ink font-medium text-surface"
+                : "bg-surface-2 text-ink-2 hover:bg-surface-3 hover:text-ink",
             )}
           >
             {label}

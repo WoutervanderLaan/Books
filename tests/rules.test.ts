@@ -62,19 +62,36 @@ describe("rule matching", () => {
   it("prefers your own rules over starter rules and specific over generic", () => {
     const rules = sortRules([
       rule({ id: 1, counterpartyContains: "belastingdienst", source: "starter", categoryId: 10 }),
-      rule({ id: 2, counterpartyContains: "belastingdienst", descriptionContains: "toeslagen", source: "starter", categoryId: 11 }),
+      rule({
+        id: 2,
+        counterpartyContains: "belastingdienst",
+        descriptionContains: "toeslagen",
+        source: "starter",
+        categoryId: 11,
+      }),
       rule({ id: 3, counterpartyContains: "albert heijn", source: "starter", categoryId: 12 }),
       rule({ id: 4, counterpartyContains: "albert heijn", source: "auto", categoryId: 13 }),
     ]);
-    expect(findMatchingRule(rules, tx("Belastingdienst", "Zorgtoeslag Toeslagen", 9000), personal)?.categoryId).toBe(11);
-    expect(findMatchingRule(rules, tx("Belastingdienst", "IB 2024"), personal)?.categoryId).toBe(10);
+    expect(
+      findMatchingRule(rules, tx("Belastingdienst", "Zorgtoeslag Toeslagen", 9000), personal)
+        ?.categoryId,
+    ).toBe(11);
+    expect(findMatchingRule(rules, tx("Belastingdienst", "IB 2024"), personal)?.categoryId).toBe(
+      10,
+    );
     expect(findMatchingRule(rules, tx("Albert Heijn 12"), personal)?.categoryId).toBe(13);
   });
 
   it("respects account scope and direction", () => {
     const rules = sortRules([
       rule({ id: 1, counterpartyContains: "kpn", accountKind: "business", categoryId: 20 }),
-      rule({ id: 2, counterpartyContains: "client", direction: "in", accountId: 2, categoryId: 21 }),
+      rule({
+        id: 2,
+        counterpartyContains: "client",
+        direction: "in",
+        accountId: 2,
+        categoryId: 21,
+      }),
     ]);
     expect(findMatchingRule(rules, tx("KPN B.V."), personal)).toBeNull();
     expect(findMatchingRule(rules, tx("KPN B.V."), business)?.categoryId).toBe(20);
@@ -95,14 +112,25 @@ describe("rule suggestions", () => {
     expect(suggestRule(tx("AH to go 5832 Utrecht"))?.counterpartyContains).toBe("ah to go");
   });
   it("looks at the description for payment providers", () => {
-    expect(suggestRule(tx("PayPal Europe S.a.r.l. et Cie S.C.A", "1046512309574 PAYPAL Spotify P1234", -999, "NL12PAYP0000000001"))).toEqual({
+    expect(
+      suggestRule(
+        tx(
+          "PayPal Europe S.a.r.l. et Cie S.C.A",
+          "1046512309574 PAYPAL Spotify P1234",
+          -999,
+          "NL12PAYP0000000001",
+        ),
+      ),
+    ).toEqual({
       counterpartyContains: "paypal",
       descriptionContains: "spotify",
       counterpartyIban: null,
     });
   });
   it("adds description keywords for multi-purpose payees", () => {
-    expect(suggestRule(tx("Belastingdienst", "Omzetbelasting 4e kwartaal", -5000, "NL86INGB0002445588"))).toEqual({
+    expect(
+      suggestRule(tx("Belastingdienst", "Omzetbelasting 4e kwartaal", -5000, "NL86INGB0002445588")),
+    ).toEqual({
       counterpartyContains: "belastingdienst",
       descriptionContains: "omzetbelasting kwartaal",
       counterpartyIban: null,
@@ -112,7 +140,12 @@ describe("rule suggestions", () => {
 
 describe("own transfers", () => {
   const cats = [
-    { id: 1, kind: "transfer" as const, scope: "personal" as const, role: "internal_transfer" as const },
+    {
+      id: 1,
+      kind: "transfer" as const,
+      scope: "personal" as const,
+      role: "internal_transfer" as const,
+    },
     { id: 2, kind: "income" as const, scope: "personal" as const, role: "private" as const },
     { id: 3, kind: "transfer" as const, scope: "personal" as const, role: "private" as const },
     { id: 4, kind: "transfer" as const, scope: "business" as const, role: "private" as const },
@@ -121,9 +154,13 @@ describe("own transfers", () => {
   const accounts = [personal, business, savings];
   it("classifies transfers by the accounts involved", () => {
     expect(detectOwnTransfer(tx(null, "", -100, savings.iban), personal, accounts, cats)).toBe(1);
-    expect(detectOwnTransfer(tx(null, "", 300000, business.iban), personal, accounts, cats)).toBe(2);
+    expect(detectOwnTransfer(tx(null, "", 300000, business.iban), personal, accounts, cats)).toBe(
+      2,
+    );
     expect(detectOwnTransfer(tx(null, "", -100, business.iban), personal, accounts, cats)).toBe(3);
-    expect(detectOwnTransfer(tx(null, "", -300000, personal.iban), business, accounts, cats)).toBe(4);
+    expect(detectOwnTransfer(tx(null, "", -300000, personal.iban), business, accounts, cats)).toBe(
+      4,
+    );
     expect(detectOwnTransfer(tx(null, "", -100, "NL00OTHER"), personal, accounts, cats)).toBeNull();
   });
 });
@@ -157,24 +194,64 @@ describe("analytics", () => {
     ];
     const found = detectRecurring(txs, catMap(cats));
     expect(found).toHaveLength(1);
-    expect(found[0]).toMatchObject({ name: "Netflix", cadence: "monthly", lastAmount: 1199, active: true });
+    expect(found[0]).toMatchObject({
+      name: "Netflix",
+      cadence: "monthly",
+      lastAmount: 1199,
+      active: true,
+    });
     expect(found[0].priceChange).toBeCloseTo(0.091, 2);
   });
 
   it("compares budgets with actuals over a period", () => {
     const rows = budgetVsActual(
       [
-        { id: 1, categoryId: 2, name: "Food", amount: 40000, frequency: "monthly", type: "variable", startMonth: null, endMonth: null },
-        { id: 2, categoryId: 1, name: "Netflix", amount: 1200, frequency: "monthly", type: "fixed", startMonth: "2025-02", endMonth: null },
-        { id: 3, categoryId: 3, name: "Salary", amount: 300000, frequency: "monthly", type: "fixed", startMonth: null, endMonth: null },
+        {
+          id: 1,
+          categoryId: 2,
+          name: "Food",
+          amount: 40000,
+          frequency: "monthly",
+          type: "variable",
+          startMonth: null,
+          endMonth: null,
+        },
+        {
+          id: 2,
+          categoryId: 1,
+          name: "Netflix",
+          amount: 1200,
+          frequency: "monthly",
+          type: "fixed",
+          startMonth: "2025-02",
+          endMonth: null,
+        },
+        {
+          id: 3,
+          categoryId: 3,
+          name: "Salary",
+          amount: 300000,
+          frequency: "monthly",
+          type: "fixed",
+          startMonth: null,
+          endMonth: null,
+        },
       ],
-      [row("2025-01-10", -45000, 2, "Jumbo"), row("2025-02-10", -30000, 2, "Jumbo"), row("2025-02-25", 310000, 3, "Employer")],
+      [
+        row("2025-01-10", -45000, 2, "Jumbo"),
+        row("2025-02-10", -30000, 2, "Jumbo"),
+        row("2025-02-25", 310000, 3, "Employer"),
+      ],
       catMap(cats),
       ["2025-01", "2025-02"],
     );
     const food = rows.find((r) => r.categoryId === 2)!;
     expect(food).toMatchObject({ budget: 80000, actual: 75000, difference: 5000 });
     expect(rows.find((r) => r.categoryId === 1)).toMatchObject({ budget: 1200, actual: 0 });
-    expect(rows.find((r) => r.categoryId === 3)).toMatchObject({ budget: 600000, actual: 310000, difference: -290000 });
+    expect(rows.find((r) => r.categoryId === 3)).toMatchObject({
+      budget: 600000,
+      actual: 310000,
+      difference: -290000,
+    });
   });
 });

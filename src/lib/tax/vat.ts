@@ -19,17 +19,25 @@ export interface VatSplit {
  * Splits a transaction amount into base and VAT.
  * `gross` is sign-adjusted: positive = a normal sale (for income) or purchase (for expenses).
  */
-export function splitVat(gross: number, code: VatCode, rates: VatRates, override?: number | null, kor = false): VatSplit {
+export function splitVat(
+  gross: number,
+  code: VatCode,
+  rates: VatRates,
+  override?: number | null,
+  kor = false,
+): VatSplit {
   if (kor) return { gross, base: gross, vat: 0 };
   const sign = gross < 0 ? -1 : 1;
   if (code === "high" || code === "low") {
     const rate = code === "high" ? rates.vatHigh : rates.vatLow;
-    const vat = override != null ? sign * Math.abs(override) : Math.round((gross * rate) / (100 + rate));
+    const vat =
+      override != null ? sign * Math.abs(override) : Math.round((gross * rate) / (100 + rate));
     return { gross, base: gross - vat, vat };
   }
   if (code === "eu" || code === "non_eu") {
     // Reverse charge: the amount paid excludes VAT; you declare and deduct it yourself.
-    const vat = override != null ? sign * Math.abs(override) : Math.round((gross * rates.vatHigh) / 100);
+    const vat =
+      override != null ? sign * Math.abs(override) : Math.round((gross * rates.vatHigh) / 100);
     return { gross, base: gross, vat };
   }
   return { gross, base: gross, vat: 0 };

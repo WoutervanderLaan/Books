@@ -2,8 +2,28 @@
 
 import { useRef, useState, useTransition } from "react";
 import { CheckCircle2, FileUp, TriangleAlert } from "lucide-react";
-import { commitImportAction, previewImportAction, type CommitResponse, type PreviewResponse } from "@/app/actions/import";
-import { Amount, Badge, Button, Card, CardBody, CardHeader, Field, Notice, Select, LinkButton, cn, td, th, thNum } from "@/components/ui";
+import {
+  commitImportAction,
+  previewImportAction,
+  type CommitResponse,
+  type PreviewResponse,
+} from "@/app/actions/import";
+import {
+  Amount,
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Field,
+  Notice,
+  Select,
+  LinkButton,
+  cn,
+  td,
+  th,
+  thNum,
+} from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/format";
 import type { NeedsMapping } from "@/lib/import/types";
@@ -17,7 +37,13 @@ type Step =
   | { kind: "preview"; preview: ImportPreview; mapping: CsvMapping | null }
   | { kind: "done"; result: Extract<CommitResponse, { kind: "done" }>["summary"] };
 
-export function ImportWizard({ accountId, hasSavedMapping }: { accountId: number; hasSavedMapping: boolean }) {
+export function ImportWizard({
+  accountId,
+  hasSavedMapping,
+}: {
+  accountId: number;
+  hasSavedMapping: boolean;
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [step, setStep] = useState<Step>({ kind: "idle" });
   const [includePossible, setIncludePossible] = useState(false);
@@ -35,7 +61,8 @@ export function ImportWizard({ accountId, hasSavedMapping }: { accountId: number
     startTransition(async () => {
       const res: PreviewResponse = await previewImportAction(accountId, formData(f, mapping));
       if (res.kind === "error") setStep({ kind: "error", error: res.error });
-      else if (res.kind === "mapping") setStep({ kind: "mapping", mapping: res.mapping, draft: res.mapping.suggestion });
+      else if (res.kind === "mapping")
+        setStep({ kind: "mapping", mapping: res.mapping, draft: res.mapping.suggestion });
       else setStep({ kind: "preview", preview: res.preview, mapping });
     });
 
@@ -71,8 +98,12 @@ export function ImportWizard({ accountId, hasSavedMapping }: { accountId: number
           )}
         >
           <FileUp className="size-6 text-accent" aria-hidden />
-          <span className="mt-2 text-sm font-medium text-ink">{file ? file.name : "Choose a bank export"}</span>
-          <span className="mt-1 text-xs text-muted">.csv, .txt, .xml (CAMT.053), .sta / .940 (MT940)</span>
+          <span className="mt-2 text-sm font-medium text-ink">
+            {file ? file.name : "Choose a bank export"}
+          </span>
+          <span className="mt-1 text-xs text-muted">
+            .csv, .txt, .xml (CAMT.053), .sta / .940 (MT940)
+          </span>
           <input
             ref={input}
             type="file"
@@ -91,7 +122,8 @@ export function ImportWizard({ accountId, hasSavedMapping }: { accountId: number
 
         {step.kind === "error" ? (
           <Notice tone="critical">
-            <span className="font-medium text-ink">Couldn&apos;t import this file.</span> {step.error}
+            <span className="font-medium text-ink">Couldn&apos;t import this file.</span>{" "}
+            {step.error}
           </Notice>
         ) : null}
 
@@ -127,12 +159,18 @@ export function ImportWizard({ accountId, hasSavedMapping }: { accountId: number
               <span className="mt-1 block">
                 {step.result.categorised} categorised automatically
                 {step.result.duplicates ? `, ${step.result.duplicates} already present` : ""}
-                {step.result.skippedPossibleDuplicates ? `, ${step.result.skippedPossibleDuplicates} likely duplicates skipped` : ""}.
+                {step.result.skippedPossibleDuplicates
+                  ? `, ${step.result.skippedPossibleDuplicates} likely duplicates skipped`
+                  : ""}
+                .
               </span>
             </Notice>
             <div className="flex flex-wrap gap-2">
               {step.result.uncategorised > 0 ? (
-                <LinkButton variant="primary" href={`/accounts/${accountId}/transactions?category=none`}>
+                <LinkButton
+                  variant="primary"
+                  href={`/accounts/${accountId}/transactions?category=none`}
+                >
                   Review {step.result.uncategorised} uncategorised
                 </LinkButton>
               ) : null}
@@ -174,7 +212,9 @@ function PreviewPanel({
           </span>
         ) : null}
         {preview.closingBalance ? (
-          <span className="text-ink-2">· closing balance {formatMoney(preview.closingBalance.amount)}</span>
+          <span className="text-ink-2">
+            · closing balance {formatMoney(preview.closingBalance.amount)}
+          </span>
         ) : null}
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -186,19 +226,29 @@ function PreviewPanel({
       {preview.ibanMismatch ? (
         <Notice tone="warning">
           <span className="flex items-center gap-2 font-medium text-ink">
-            <TriangleAlert className="size-4" aria-hidden /> This file is for {preview.fileIbans.join(", ")}
+            <TriangleAlert className="size-4" aria-hidden /> This file is for{" "}
+            {preview.fileIbans.join(", ")}
           </span>
-          That doesn&apos;t match this account&apos;s IBAN. Make sure you&apos;re importing into the right account.
+          That doesn&apos;t match this account&apos;s IBAN. Make sure you&apos;re importing into the
+          right account.
         </Notice>
       ) : null}
       {preview.possibleDuplicateCount ? (
         <Notice tone="warning">
           <p>
-            <span className="font-medium text-ink">{preview.possibleDuplicateCount} likely duplicates:</span> same date, amount and payee as transactions
-            already stored (perhaps imported from a different file format). They&apos;re skipped unless you include them.
+            <span className="font-medium text-ink">
+              {preview.possibleDuplicateCount} likely duplicates:
+            </span>{" "}
+            same date, amount and payee as transactions already stored (perhaps imported from a
+            different file format). They&apos;re skipped unless you include them.
           </p>
           <label className="mt-2 flex items-center gap-2">
-            <input type="checkbox" checked={includePossible} onChange={(e) => setIncludePossible(e.target.checked)} className="accent-[var(--accent)]" />
+            <input
+              type="checkbox"
+              checked={includePossible}
+              onChange={(e) => setIncludePossible(e.target.checked)}
+              className="accent-[var(--accent)]"
+            />
             Import them anyway
           </label>
         </Notice>
@@ -228,7 +278,9 @@ function PreviewPanel({
                   <p className="truncate">{r.counterpartyName ?? "—"}</p>
                   <p className="truncate text-xs text-muted">{r.description}</p>
                 </td>
-                <td className={`${td} text-ink-2`}>{r.category ?? <span className="text-muted">—</span>}</td>
+                <td className={`${td} text-ink-2`}>
+                  {r.category ?? <span className="text-muted">—</span>}
+                </td>
                 <td className={td}>
                   {r.status === "new" ? (
                     <Badge tone="accent">New</Badge>
@@ -247,12 +299,16 @@ function PreviewPanel({
         </table>
       </div>
       {preview.total > preview.rows.length ? (
-        <p className="text-xs text-muted">Showing the latest {preview.rows.length} of {preview.total} rows.</p>
+        <p className="text-xs text-muted">
+          Showing the latest {preview.rows.length} of {preview.total} rows.
+        </p>
       ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Button variant="primary" onClick={onImport} disabled={pending || toImport === 0}>
-          {toImport === 0 ? "Nothing new to import" : `Import ${toImport} transaction${toImport === 1 ? "" : "s"}`}
+          {toImport === 0
+            ? "Nothing new to import"
+            : `Import ${toImport} transaction${toImport === 1 ? "" : "s"}`}
         </Button>
         <Button variant="ghost" onClick={onCancel} disabled={pending}>
           Cancel
@@ -286,12 +342,23 @@ function MappingForm({
   onApply: () => void;
   pending: boolean;
 }) {
-  const columns = mapping.headers.map((h, i) => ({ index: i, label: draft.hasHeader ? h || `Column ${i + 1}` : `Column ${i + 1}` }));
+  const columns = mapping.headers.map((h, i) => ({
+    index: i,
+    label: draft.hasHeader ? h || `Column ${i + 1}` : `Column ${i + 1}`,
+  }));
   const sample = draft.hasHeader ? mapping.sample.slice(1) : mapping.sample;
   const set = (patch: Partial<CsvMapping>) => onChange({ ...draft, ...patch });
-  const columnSelect = (label: string, value: number | undefined, update: (v: number | undefined) => void, optional = true) => (
+  const columnSelect = (
+    label: string,
+    value: number | undefined,
+    update: (v: number | undefined) => void,
+    optional = true,
+  ) => (
     <Field label={label}>
-      <Select value={value ?? ""} onChange={(e) => update(e.target.value === "" ? undefined : Number(e.target.value))}>
+      <Select
+        value={value ?? ""}
+        onChange={(e) => update(e.target.value === "" ? undefined : Number(e.target.value))}
+      >
         {optional ? <option value="">— none —</option> : null}
         {columns.map((c) => (
           <option key={c.index} value={c.index}>
@@ -305,15 +372,20 @@ function MappingForm({
   return (
     <div className="space-y-4">
       <Notice tone="accent">
-        This CSV layout isn&apos;t one of the built-in bank formats{hasSavedMapping ? " (and doesn't match your saved mapping)" : ""}. Tell us which column is
-        which — the mapping is saved for this account, so next month&apos;s file imports in one click.
+        This CSV layout isn&apos;t one of the built-in bank formats
+        {hasSavedMapping ? " (and doesn't match your saved mapping)" : ""}. Tell us which column is
+        which — the mapping is saved for this account, so next month&apos;s file imports in one
+        click.
       </Notice>
       <div className="overflow-x-auto rounded-lg border border-line">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
               {columns.map((c) => (
-                <th key={c.index} className="border-b border-line px-2 py-1.5 text-left font-medium whitespace-nowrap text-ink-2">
+                <th
+                  key={c.index}
+                  className="border-b border-line px-2 py-1.5 text-left font-medium whitespace-nowrap text-ink-2"
+                >
                   {c.label}
                 </th>
               ))}
@@ -323,7 +395,10 @@ function MappingForm({
             {sample.slice(0, 5).map((row, i) => (
               <tr key={i}>
                 {columns.map((c) => (
-                  <td key={c.index} className="max-w-48 truncate border-b border-line px-2 py-1.5 whitespace-nowrap text-ink">
+                  <td
+                    key={c.index}
+                    className="max-w-48 truncate border-b border-line px-2 py-1.5 whitespace-nowrap text-ink"
+                  >
                     {row[c.index]}
                   </td>
                 ))}
@@ -333,13 +408,21 @@ function MappingForm({
         </table>
       </div>
       <label className="flex items-center gap-2 text-sm text-ink-2">
-        <input type="checkbox" checked={draft.hasHeader} onChange={(e) => set({ hasHeader: e.target.checked })} className="accent-[var(--accent)]" />
+        <input
+          type="checkbox"
+          checked={draft.hasHeader}
+          onChange={(e) => set({ hasHeader: e.target.checked })}
+          className="accent-[var(--accent)]"
+        />
         First row contains column names
       </label>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {columnSelect("Date", draft.date, (v) => set({ date: v ?? 0 }), false)}
         <Field label="Date format">
-          <Select value={draft.dateFormat} onChange={(e) => set({ dateFormat: e.target.value as DateFormat })}>
+          <Select
+            value={draft.dateFormat}
+            onChange={(e) => set({ dateFormat: e.target.value as DateFormat })}
+          >
             {DATE_FORMATS.map((f) => (
               <option key={f} value={f}>
                 {f}
@@ -348,23 +431,34 @@ function MappingForm({
           </Select>
         </Field>
         <Field label="Decimal separator">
-          <Select value={draft.decimal} onChange={(e) => set({ decimal: e.target.value as "," | "." })}>
+          <Select
+            value={draft.decimal}
+            onChange={(e) => set({ decimal: e.target.value as "," | "." })}
+          >
             <option value=",">Comma (1.234,56)</option>
             <option value=".">Point (1,234.56)</option>
           </Select>
         </Field>
         <Field label="Amount">
-          <Select value={draft.amountMode} onChange={(e) => set({ amountMode: e.target.value as CsvMapping["amountMode"] })}>
+          <Select
+            value={draft.amountMode}
+            onChange={(e) => set({ amountMode: e.target.value as CsvMapping["amountMode"] })}
+          >
             <option value="signed">Signed (minus = out)</option>
             <option value="indicator">With debit/credit column</option>
             <option value="split">Separate in/out columns</option>
           </Select>
         </Field>
-        {columnSelect(draft.amountMode === "split" ? "Money in column" : "Amount column", draft.amount, (v) => set({ amount: v ?? 0 }), false)}
+        {columnSelect(
+          draft.amountMode === "split" ? "Money in column" : "Amount column",
+          draft.amount,
+          (v) => set({ amount: v ?? 0 }),
+          false,
+        )}
         {draft.amountMode === "indicator" ? (
           <>
             {columnSelect("Debit/credit column", draft.indicator, (v) => set({ indicator: v }))}
-            <Field label="Values meaning money out" >
+            <Field label="Values meaning money out">
               <input
                 className="h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm"
                 value={draft.debitValues ?? ""}
@@ -373,10 +467,14 @@ function MappingForm({
             </Field>
           </>
         ) : null}
-        {draft.amountMode === "split" ? columnSelect("Money out column", draft.debit, (v) => set({ debit: v })) : null}
+        {draft.amountMode === "split"
+          ? columnSelect("Money out column", draft.debit, (v) => set({ debit: v }))
+          : null}
         {columnSelect("Payee name", draft.counterpartyName, (v) => set({ counterpartyName: v }))}
         {columnSelect("Payee IBAN", draft.counterpartyIban, (v) => set({ counterpartyIban: v }))}
-        {columnSelect("Description", draft.description[0], (v) => set({ description: v == null ? [] : [v] }))}
+        {columnSelect("Description", draft.description[0], (v) =>
+          set({ description: v == null ? [] : [v] }),
+        )}
         {columnSelect("Balance after", draft.balance, (v) => set({ balance: v }))}
         {columnSelect("Unique id", draft.externalId, (v) => set({ externalId: v }))}
       </div>

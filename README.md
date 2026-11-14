@@ -35,10 +35,10 @@ For day-to-day use, `npm run build && npm start` is faster than the dev server.
 ## The monthly routine
 
 1. **Download** last month's transactions from your bank (see below).
-2. **Import** them on the account's *Import* tab. You get a preview first: new transactions, ones already
+2. **Import** them on the account's _Import_ tab. You get a preview first: new transactions, ones already
    imported (skipped automatically, so overlapping periods are fine) and how many were categorised.
-3. **Review** the uncategorised ones (the *Transactions* tab shows a badge). Pick a category; with
-   *Remember my choice* on, a rule is created so the same payee is recognised next month — and applied to
+3. **Review** the uncategorised ones (the _Transactions_ tab shows a badge). Pick a category; with
+   _Remember my choice_ on, a rule is created so the same payee is recognised next month — and applied to
    other uncategorised transactions right away.
 4. **Check** the dashboard: income vs spending, where the money went, budget vs actual, recurring payments.
 
@@ -48,34 +48,34 @@ For day-to-day use, `npm run build && npm start` is faster than the dev server.
 
 Create one account per bank account and mark it **personal** or **business**. Accounts that know each other's
 IBAN recognise transfers between them: money to your savings account is an internal transfer (left out of
-spending), and money from your business account to your personal account is *income from own business* on
-one side and a *private withdrawal* on the other.
+spending), and money from your business account to your personal account is _income from own business_ on
+one side and a _private withdrawal_ on the other.
 
 ## Supported bank files
 
-| Bank | File |
-| --- | --- |
-| ING | CSV (Dutch or English headers) — *Af- en bijschrijvingen downloaden* |
-| Rabobank | CSV — *Transacties downloaden* |
-| ABN AMRO | TXT (tab-separated) — *Mutaties downloaden* |
-| bunq | CSV — *Export statement* |
-| Knab | CSV |
-| ASN / SNS / RegioBank | CSV |
-| Any Dutch bank | **CAMT.053** XML (recommended if your bank offers it) or **MT940** |
-| Anything else | Any CSV: map the columns once; the mapping is saved per account |
+| Bank                  | File                                                                 |
+| --------------------- | -------------------------------------------------------------------- |
+| ING                   | CSV (Dutch or English headers) — _Af- en bijschrijvingen downloaden_ |
+| Rabobank              | CSV — _Transacties downloaden_                                       |
+| ABN AMRO              | TXT (tab-separated) — _Mutaties downloaden_                          |
+| bunq                  | CSV — _Export statement_                                             |
+| Knab                  | CSV                                                                  |
+| ASN / SNS / RegioBank | CSV                                                                  |
+| Any Dutch bank        | **CAMT.053** XML (recommended if your bank offers it) or **MT940**   |
+| Anything else         | Any CSV: map the columns once; the mapping is saved per account      |
 
 Balances in the file keep the account balance in sync automatically. Stick to one file format per account:
-re-importing in a different format is detected as *likely duplicates* and skipped by default.
+re-importing in a different format is detected as _likely duplicates_ and skipped by default.
 
 ## Categories and rules
 
 Categories are grouped (Housing, Daily life, Transport, …) and shared by all accounts of the same type. A
-category is *income*, *spending* or a *transfer* (left out of totals). Edit them under **Categories**.
+category is _income_, _spending_ or a _transfer_ (left out of totals). Edit them under **Categories**.
 
 Rules decide categories on import, in this order:
 
 1. transfers between your own accounts;
-2. **your rules** — created when you categorise with *remember* on, or by hand on the *Rules* tab;
+2. **your rules** — created when you categorise with _remember_ on, or by hand on the _Rules_ tab;
 3. **starter rules** for common Dutch shops and organisations (Albert Heijn, NS, Ziggo, Eneco, Zilveren
    Kruis, …).
 
@@ -87,8 +87,8 @@ changed by rules.
 ## Budget
 
 Add your fixed costs and estimates per month, quarter or year, each linked to a category — or import them from
-your Excel sheet (**Import from Excel** on the *Budget* tab; `.xlsx` or `.csv`). You point out the name and amount
-columns, optionally category and frequency columns (Dutch words like *maand*/*jaar* are understood), and check
+your Excel sheet (**Import from Excel** on the _Budget_ tab; `.xlsx` or `.csv`). You point out the name and amount
+columns, optionally category and frequency columns (Dutch words like _maand_/_jaar_ are understood), and check
 the suggested categories before anything is saved. Total rows are skipped.
 
 The budget page shows each line's monthly equivalent next to your actual monthly average over the last 12
@@ -99,7 +99,7 @@ any period.
 
 ## Trends
 
-The *Trends* tab answers "has my spending gone up or down?":
+The _Trends_ tab answers "has my spending gone up or down?":
 
 - monthly spending per year in one chart;
 - the biggest changes, last 12 months vs the 12 before;
@@ -131,13 +131,13 @@ date.
 
 > The tax figures are an **indication** to help you set money aside and prepare your return — not tax advice.
 > Parameters for 2024 and 2025 are built in; 2026 is based on the 2026 tax plan and marked provisional. You can
-> correct any parameter per year under *Tax settings*. Box 2/3, mortgage interest, pension deductions, fiscal
+> correct any parameter per year under _Tax settings_. Box 2/3, mortgage interest, pension deductions, fiscal
 > partner allocation and loss carry-forward are not included.
 
 ## Privacy and backups
 
-- Data lives in a single file: `data/finance.db` (see *Data & backup* in the app for the exact path).
-- *Data & backup* downloads a complete copy and restores one (the current file is kept as a safety copy).
+- Data lives in a single file: `data/finance.db` (see _Data & backup_ in the app for the exact path).
+- _Data & backup_ downloads a complete copy and restores one (the current file is kept as a safety copy).
 - Each account can export its transactions as CSV.
 - The server binds to `127.0.0.1`; there is no login, so don't expose it to a network.
 - Keep the data folder on an encrypted disk (FileVault/BitLocker) and in your regular backups.

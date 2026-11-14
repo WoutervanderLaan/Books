@@ -11,7 +11,10 @@ import { AssetForm } from "./asset-form";
 
 export const metadata = { title: "Assets" };
 
-export default async function AssetsPage({ params, searchParams }: PageProps<"/accounts/[accountId]/tax/assets">) {
+export default async function AssetsPage({
+  params,
+  searchParams,
+}: PageProps<"/accounts/[accountId]/tax/assets">) {
   const { accountId } = await params;
   const year = yearFromParams(await searchParams);
   const account = requireAccount(accountId);
@@ -24,10 +27,12 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/a
         <AssetForm accountId={account.id} />
       </div>
       <Notice>
-        Business assets of €{o.params.minAssetValue} or more (excl. VAT) that last more than a year — laptop, camera, furniture — are depreciated
-        over their useful life instead of deducted at once. Categorise the purchase as “Asset purchases (depreciated)” so it isn&apos;t counted twice.
-        Total investments between €{o.params.kia.minTotal.toLocaleString("nl-NL")} and €{o.params.kia.zeroFrom.toLocaleString("nl-NL")} in a year
-        also give a small-scale investment deduction (KIA).
+        Business assets of €{o.params.minAssetValue} or more (excl. VAT) that last more than a year
+        — laptop, camera, furniture — are depreciated over their useful life instead of deducted at
+        once. Categorise the purchase as “Asset purchases (depreciated)” so it isn&apos;t counted
+        twice. Total investments between €{o.params.kia.minTotal.toLocaleString("nl-NL")} and €
+        {o.params.kia.zeroFrom.toLocaleString("nl-NL")} in a year also give a small-scale investment
+        deduction (KIA).
       </Notice>
       <Card>
         <CardHeader
@@ -54,10 +59,18 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/a
                 <tr key={asset.id}>
                   <td className={td}>
                     {asset.name}
-                    {asset.disposedDate ? <span className="block text-xs text-muted">Sold/disposed {formatDate(asset.disposedDate)}</span> : null}
-                    {!asset.kiaEligible ? <span className="block text-xs text-muted">No KIA</span> : null}
+                    {asset.disposedDate ? (
+                      <span className="block text-xs text-muted">
+                        Sold/disposed {formatDate(asset.disposedDate)}
+                      </span>
+                    ) : null}
+                    {!asset.kiaEligible ? (
+                      <span className="block text-xs text-muted">No KIA</span>
+                    ) : null}
                   </td>
-                  <td className={`${td} whitespace-nowrap text-ink-2`}>{formatDate(asset.purchaseDate)}</td>
+                  <td className={`${td} whitespace-nowrap text-ink-2`}>
+                    {formatDate(asset.purchaseDate)}
+                  </td>
                   <td className={tdNum}>{formatMoney(asset.cost)}</td>
                   <td className={`${tdNum} text-ink-2`}>{asset.usefulLifeYears} yr</td>
                   <td className={tdNum}>{formatMoney(depreciation)}</td>
@@ -65,7 +78,11 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/a
                   <td className={`${td} text-right`}>
                     <div className="flex justify-end gap-1">
                       <AssetForm accountId={account.id} asset={asset} />
-                      <ConfirmButton action={deleteAssetAction.bind(null, asset.id)} confirm={`Delete ${asset.name}?`} variant="ghost">
+                      <ConfirmButton
+                        action={deleteAssetAction.bind(null, asset.id)}
+                        confirm={`Delete ${asset.name}?`}
+                        variant="ghost"
+                      >
                         Delete
                       </ConfirmButton>
                     </div>
@@ -76,7 +93,10 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/a
           </Table>
         ) : (
           <div className="px-5 pb-5">
-            <EmptyState title="No assets yet">Add equipment you bought for the business so depreciation and KIA are included in the estimate.</EmptyState>
+            <EmptyState title="No assets yet">
+              Add equipment you bought for the business so depreciation and KIA are included in the
+              estimate.
+            </EmptyState>
           </div>
         )}
       </Card>

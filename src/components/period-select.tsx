@@ -4,7 +4,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Select } from "./ui";
 
 /** Period filter: one control above everything it scopes, stored in the URL. */
-export function PeriodSelect({ options, value, param = "period" }: { options: { key: string; label: string }[]; value: string; param?: string }) {
+export function PeriodSelect({
+  options,
+  value,
+  param = "period",
+}: {
+  options: { key: string; label: string }[];
+  value: string;
+  param?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();

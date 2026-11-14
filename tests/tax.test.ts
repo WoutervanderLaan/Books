@@ -25,7 +25,11 @@ describe("splitVat", () => {
     expect(splitVat(-12100, "high", rates)).toEqual({ gross: -12100, base: -10000, vat: -2100 });
   });
   it("ignores VAT under the KOR", () => {
-    expect(splitVat(12100, "high", rates, null, true)).toEqual({ gross: 12100, base: 12100, vat: 0 });
+    expect(splitVat(12100, "high", rates, null, true)).toEqual({
+      gross: 12100,
+      base: 12100,
+      vat: 0,
+    });
   });
 });
 
@@ -77,7 +81,9 @@ describe("tax parameters", () => {
     expect(Math.max(0, piecewise(200000, p.arbeidskorting))).toBe(0);
   });
   it("applies overrides and falls back for unknown years", () => {
-    expect(resolveParams(2025, { zelfstandigenaftrek: 1000, "box1.0.rate": 0.3 }).zelfstandigenaftrek).toBe(1000);
+    expect(
+      resolveParams(2025, { zelfstandigenaftrek: 1000, "box1.0.rate": 0.3 }).zelfstandigenaftrek,
+    ).toBe(1000);
     expect(resolveParams(2025, { "box1.0.rate": 0.3 }).box1[0].rate).toBe(0.3);
     const future = builtInParams(2031);
     expect(future.year).toBe(2031);
@@ -164,7 +170,15 @@ describe("profitAndLoss", () => {
     const pnl = profitAndLoss(
       [
         tx({ amount: 1_210_000 }),
-        tx({ amount: -10_900, categoryId: 2, categoryName: "Meals", categoryKind: "expense", categoryVatCode: "low", categoryTaxGroup: "sales", deductiblePct: 80 }),
+        tx({
+          amount: -10_900,
+          categoryId: 2,
+          categoryName: "Meals",
+          categoryKind: "expense",
+          categoryVatCode: "low",
+          categoryTaxGroup: "sales",
+          deductiblePct: 80,
+        }),
         tx({ amount: -363_000, categoryId: 3, categoryKind: "expense", categoryRole: "asset" }),
         tx({ amount: -100_000, categoryId: 4, categoryKind: "transfer" }),
         tx({ amount: -5_000, categoryId: null, categoryKind: null }),
