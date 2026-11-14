@@ -1,7 +1,18 @@
 import Link from "next/link";
 import { acceptTransfersAction } from "@/app/actions/transfers";
 import { SubmitButton } from "@/components/form-bits";
-import { Amount, Card, CardHeader, EmptyState, Notice, PageHeader, Table, td, th, thNum } from "@/components/ui";
+import {
+  Amount,
+  Card,
+  CardHeader,
+  EmptyState,
+  Notice,
+  PageHeader,
+  Table,
+  td,
+  th,
+  thNum,
+} from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { getDb } from "@/lib/server";
 import { listAccounts } from "@/lib/services/accounts";
@@ -26,12 +37,16 @@ export default function TransfersPage() {
             {withoutIban.map((a, i) => (
               <span key={a.id}>
                 {i ? ", " : ""}
-                <Link className="font-medium text-accent hover:underline" href={`/accounts/${a.id}/settings`}>
+                <Link
+                  className="font-medium text-accent hover:underline"
+                  href={`/accounts/${a.id}/settings`}
+                >
                   {a.name}
                 </Link>
               </span>
             ))}{" "}
-            {withoutIban.length === 1 ? "has" : "have"} no IBAN yet, so transfers to {withoutIban.length === 1 ? "it" : "them"} can&apos;t be recognised.
+            {withoutIban.length === 1 ? "has" : "have"} no IBAN yet, so transfers to{" "}
+            {withoutIban.length === 1 ? "it" : "them"} can&apos;t be recognised.
           </Notice>
         ) : null}
 
@@ -60,14 +75,25 @@ export default function TransfersPage() {
                   {review.map((r) => (
                     <tr key={r.id}>
                       <td className={td}>
-                        <input type="checkbox" name="id" value={r.id} defaultChecked aria-label={`Mark ${formatDate(r.date)} as own transfer`} className="accent-[var(--accent)]" />
+                        <input
+                          type="checkbox"
+                          name="id"
+                          value={r.id}
+                          defaultChecked
+                          aria-label={`Mark ${formatDate(r.date)} as own transfer`}
+                          className="accent-[var(--accent)]"
+                        />
                       </td>
                       <td className={`${td} whitespace-nowrap text-ink-2`}>{formatDate(r.date)}</td>
                       <td className={`${td} whitespace-nowrap`}>
-                        {r.accountName} <span className="text-muted">{r.amount < 0 ? "→" : "←"}</span> {r.otherAccountName}
+                        {r.accountName}{" "}
+                        <span className="text-muted">{r.amount < 0 ? "→" : "←"}</span>{" "}
+                        {r.otherAccountName}
                       </td>
                       <td className={`${td} max-w-64`}>
-                        <span className="block truncate" title={r.description}>{r.counterpartyName || r.description || "—"}</span>
+                        <span className="block truncate" title={r.description}>
+                          {r.counterpartyName || r.description || "—"}
+                        </span>
                       </td>
                       <td className={`${td} text-ink-2`}>{r.currentCategory ?? "—"}</td>
                       <td className={td}>{r.suggestedCategory}</td>
@@ -84,7 +110,9 @@ export default function TransfersPage() {
               </div>
             </form>
           ) : (
-            <EmptyState title="Nothing to review">All transactions between your accounts are categorised as transfers.</EmptyState>
+            <EmptyState title="Nothing to review">
+              All transactions between your accounts are categorised as transfers.
+            </EmptyState>
           )}
         </Card>
 
@@ -107,19 +135,29 @@ export default function TransfersPage() {
               <tbody>
                 {missing.map((m) => (
                   <tr key={m.leg.id}>
-                    <td className={`${td} whitespace-nowrap text-ink-2`}>{formatDate(m.leg.date)}</td>
+                    <td className={`${td} whitespace-nowrap text-ink-2`}>
+                      {formatDate(m.leg.date)}
+                    </td>
                     <td className={td}>
-                      <Link className="hover:underline" href={`/accounts/${m.leg.accountId}/transactions?from=${m.leg.date}&to=${m.leg.date}`}>
+                      <Link
+                        className="hover:underline"
+                        href={`/accounts/${m.leg.accountId}/transactions?from=${m.leg.date}&to=${m.leg.date}`}
+                      >
                         {m.accountName}
                       </Link>
                     </td>
                     <td className={td}>
-                      <Link className="hover:underline" href={`/accounts/${m.otherAccountId}/import`}>
+                      <Link
+                        className="hover:underline"
+                        href={`/accounts/${m.otherAccountId}/import`}
+                      >
                         {m.otherAccountName}
                       </Link>
                     </td>
                     <td className={`${td} max-w-64`}>
-                      <span className="block truncate" title={m.description}>{m.counterpartyName || m.description || "—"}</span>
+                      <span className="block truncate" title={m.description}>
+                        {m.counterpartyName || m.description || "—"}
+                      </span>
                     </td>
                     <td className={`${td} text-right`}>
                       <Amount cents={m.leg.amount} />
@@ -130,7 +168,8 @@ export default function TransfersPage() {
             </Table>
           ) : (
             <EmptyState title="All transfers matched">
-              Every transfer has a counterpart wherever both accounts&apos; statements cover the date.
+              Every transfer has a counterpart wherever both accounts&apos; statements cover the
+              date.
             </EmptyState>
           )}
         </Card>

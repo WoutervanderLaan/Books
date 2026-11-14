@@ -7,20 +7,44 @@ import { findMatchingRule, kindFitsAmount, sortRules, type RuleLike } from "@/li
 import { createAccount, updateAccount } from "@/lib/services/accounts";
 import { applyRules, setCategoryManually } from "@/lib/services/categorize";
 import { combinedData } from "@/lib/services/dashboard";
-import { acceptTransferSuggestions, relinkOwnTransfers, transferOverview } from "@/lib/services/transfers";
+import {
+  acceptTransferSuggestions,
+  relinkOwnTransfers,
+  transferOverview,
+} from "@/lib/services/transfers";
 
 const CHECKING = "NL69INGB0123456789";
 const SAVINGS = "NL55INGB0000000003";
 
 describe("category kind vs. sign", () => {
   const rule = (over: Partial<RuleLike>): RuleLike => ({
-    id: 1, accountId: null, accountKind: null, counterpartyContains: "werkgever", descriptionContains: null,
-    counterpartyIban: null, direction: null, amountMin: null, amountMax: null, categoryId: 1, vatCode: null,
-    priority: 0, enabled: true, source: "auto", ...over,
+    id: 1,
+    accountId: null,
+    accountKind: null,
+    counterpartyContains: "werkgever",
+    descriptionContains: null,
+    counterpartyIban: null,
+    direction: null,
+    amountMin: null,
+    amountMax: null,
+    categoryId: 1,
+    vatCode: null,
+    priority: 0,
+    enabled: true,
+    source: "auto",
+    ...over,
   });
   const account = { id: 1, kind: "personal" as const, iban: null };
-  const tx = (amount: number) => ({ amount, counterpartyName: "Werkgever BV", counterpartyIban: null, description: "" });
-  const kinds = new Map([[1, "income" as const], [2, "expense" as const]]);
+  const tx = (amount: number) => ({
+    amount,
+    counterpartyName: "Werkgever BV",
+    counterpartyIban: null,
+    description: "",
+  });
+  const kinds = new Map([
+    [1, "income" as const],
+    [2, "expense" as const],
+  ]);
 
   it("knows which kinds fit money in and out", () => {
     expect(kindFitsAmount("income", 100)).toBe(true);
@@ -47,7 +71,13 @@ describe("pairing own transfers", () => {
     { id: 1, iban: CHECKING, first: "2025-01-01", last: "2025-03-31" },
     { id: 2, iban: SAVINGS, first: "2025-02-01", last: "2025-03-31" },
   ];
-  const leg = (id: number, accountId: number, date: string, amount: number, iban: string) => ({ id, accountId, date, amount, counterpartyIban: iban });
+  const leg = (id: number, accountId: number, date: string, amount: number, iban: string) => ({
+    id,
+    accountId,
+    date,
+    amount,
+    counterpartyIban: iban,
+  });
 
   it("matches opposite amounts a few days apart and reports the rest", () => {
     const missing = unmatchedTransfers(
@@ -68,28 +98,67 @@ describe("pairing own transfers", () => {
   it("counts savings balance changes and outside investments as put aside", () => {
     const roles = new Map<number, string | null>([[9, "savings"]]);
     const own = new Set([CHECKING, SAVINGS]);
-    const tx = (accountId: number, amount: number, iban: string | null, categoryId: number | null = null) => ({ accountId, date: "2025-01-01", amount, counterpartyIban: iban, categoryId });
+    const tx = (
+      accountId: number,
+      amount: number,
+      iban: string | null,
+      categoryId: number | null = null,
+    ) => ({ accountId, date: "2025-01-01", amount, counterpartyIban: iban, categoryId });
     expect(
       putAside(
-        [tx(1, -20000, SAVINGS, 9), tx(2, 20000, CHECKING), tx(2, 150, null), tx(1, -5000, "NL00BROKER", 9)],
+        [
+          tx(1, -20000, SAVINGS, 9),
+          tx(2, 20000, CHECKING),
+          tx(2, 150, null),
+          tx(1, -5000, "NL00BROKER", 9),
+        ],
         roles,
         [{ id: 2, iban: SAVINGS, first: "2025-01-01", last: "2025-01-31" }],
         own,
       ),
     ).toBe(20000 + 150 + 5000);
     // Without savings statements, the deposit seen on the checking side counts
-    expect(putAside([tx(1, -20000, SAVINGS, 9)], roles, [{ id: 2, iban: SAVINGS, first: null, last: null }], own)).toBe(20000);
+    expect(
+      putAside(
+        [tx(1, -20000, SAVINGS, 9)],
+        roles,
+        [{ id: 2, iban: SAVINGS, first: null, last: null }],
+        own,
+      ),
+    ).toBe(20000);
   });
 });
 
 describe("own accounts in the database", () => {
   let db: DB;
   let n = 0;
-  const catId = (name: string) => db.select().from(categories).where(eq(categories.name, name)).all().find((c) => c.scope === "personal")!.id;
-  const insert = (accountId: number, date: string, amount: number, iban: string | null, categoryId: number | null = null, source: "manual" | "rule" | null = null) =>
+  const catId = (name: string) =>
+    db
+      .select()
+      .from(categories)
+      .where(eq(categories.name, name))
+      .all()
+      .find((c) => c.scope === "personal")!.id;
+  const insert = (
+    accountId: number,
+    date: string,
+    amount: number,
+    iban: string | null,
+    categoryId: number | null = null,
+    source: "manual" | "rule" | null = null,
+  ) =>
     db
       .insert(transactions)
-      .values({ accountId, date, amount, counterpartyIban: iban, counterpartyName: "Me", dedupeKey: `k${++n}`, categoryId, categorySource: categoryId ? source : null })
+      .values({
+        accountId,
+        date,
+        amount,
+        counterpartyIban: iban,
+        counterpartyName: "Me",
+        dedupeKey: `k${++n}`,
+        categoryId,
+        categorySource: categoryId ? source : null,
+      })
       .returning()
       .get();
 
@@ -100,21 +169,51 @@ describe("own accounts in the database", () => {
   it("relinks past transfers when a savings account is added, but leaves manual choices for review", () => {
     const checking = createAccount(db, { name: "Checking", kind: "personal", iban: CHECKING });
     const untouched = insert(checking.id, "2025-01-05", -10000, SAVINGS);
-    const byRule = insert(checking.id, "2025-01-06", -20000, SAVINGS, catId("Miscellaneous"), "rule");
-    const manual = insert(checking.id, "2025-01-07", -30000, SAVINGS, catId("Miscellaneous"), "manual");
-    const manualSavings = insert(checking.id, "2025-01-08", -40000, SAVINGS, catId("Savings & investments"), "manual");
+    const byRule = insert(
+      checking.id,
+      "2025-01-06",
+      -20000,
+      SAVINGS,
+      catId("Miscellaneous"),
+      "rule",
+    );
+    const manual = insert(
+      checking.id,
+      "2025-01-07",
+      -30000,
+      SAVINGS,
+      catId("Miscellaneous"),
+      "manual",
+    );
+    const manualSavings = insert(
+      checking.id,
+      "2025-01-08",
+      -40000,
+      SAVINGS,
+      catId("Savings & investments"),
+      "manual",
+    );
     insert(checking.id, "2025-01-09", -5000, "NL00SHOP0000000001", catId("Groceries"), "manual");
 
-    const savings = createAccount(db, { name: "Savings", kind: "personal", iban: SAVINGS, isSavings: true });
+    const savings = createAccount(db, {
+      name: "Savings",
+      kind: "personal",
+      iban: SAVINGS,
+      isSavings: true,
+    });
     expect(savings.isSavings).toBe(true);
     const result = relinkOwnTransfers(db);
     expect(result).toEqual({ linked: 2, unlinked: 0, review: 1 });
 
-    const get = (id: number) => db.select().from(transactions).where(eq(transactions.id, id)).get()!;
+    const get = (id: number) =>
+      db.select().from(transactions).where(eq(transactions.id, id)).get()!;
     const internal = catId("Internal transfer");
     expect(get(untouched.id)).toMatchObject({ categoryId: internal, categorySource: "transfer" });
     expect(get(byRule.id)).toMatchObject({ categoryId: internal, categorySource: "transfer" });
-    expect(get(manual.id)).toMatchObject({ categoryId: catId("Miscellaneous"), categorySource: "manual" });
+    expect(get(manual.id)).toMatchObject({
+      categoryId: catId("Miscellaneous"),
+      categorySource: "manual",
+    });
     expect(get(manualSavings.id).categoryId).toBe(catId("Savings & investments"));
 
     const overview = transferOverview(db);
@@ -134,8 +233,17 @@ describe("own accounts in the database", () => {
 
   it("combines personal accounts, leaving transfers out and counting savings as put aside", () => {
     const checking = createAccount(db, { name: "Checking", kind: "personal", iban: CHECKING });
-    const savings = createAccount(db, { name: "Savings", kind: "personal", iban: SAVINGS, isSavings: true });
-    const business = createAccount(db, { name: "Business", kind: "business", iban: "NL12KNAB0123456789" });
+    const savings = createAccount(db, {
+      name: "Savings",
+      kind: "personal",
+      iban: SAVINGS,
+      isSavings: true,
+    });
+    const business = createAccount(db, {
+      name: "Business",
+      kind: "business",
+      iban: "NL12KNAB0123456789",
+    });
     insert(checking.id, "2025-01-25", 300000, "NL00WERK0000000001", catId("Salary"), "manual");
     insert(checking.id, "2025-01-26", -100000, null, catId("Groceries"), "manual");
     // Mis-categorised by hand as spending, but between own accounts: ignored in the combined view
@@ -161,15 +269,27 @@ describe("own accounts in the database", () => {
 
     setCategoryManually(db, purchase.id, catId("Clothing"), true);
     // The regular rule doesn't turn the refund into spending
-    expect(db.select().from(transactions).where(eq(transactions.id, refund.id)).get()!.categoryId).toBeNull();
-    expect(db.select().from(transactions).where(eq(transactions.id, later.id)).get()!.categoryId).toBe(catId("Clothing"));
+    expect(
+      db.select().from(transactions).where(eq(transactions.id, refund.id)).get()!.categoryId,
+    ).toBeNull();
+    expect(
+      db.select().from(transactions).where(eq(transactions.id, later.id)).get()!.categoryId,
+    ).toBe(catId("Clothing"));
 
     const { rule } = setCategoryManually(db, refund.id, catId("Clothing"), true);
     expect(rule).toMatchObject({ direction: "in", counterpartyIban: shop });
-    expect(db.select().from(rules).all().filter((r) => r.source === "auto")).toHaveLength(2);
+    expect(
+      db
+        .select()
+        .from(rules)
+        .all()
+        .filter((r) => r.source === "auto"),
+    ).toHaveLength(2);
 
     const nextRefund = insert(checking.id, "2025-03-01", 2000, shop);
     applyRules(db, checking.id);
-    expect(db.select().from(transactions).where(eq(transactions.id, nextRefund.id)).get()!.categoryId).toBe(catId("Clothing"));
+    expect(
+      db.select().from(transactions).where(eq(transactions.id, nextRefund.id)).get()!.categoryId,
+    ).toBe(catId("Clothing"));
   });
 });

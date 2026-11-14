@@ -48,7 +48,10 @@ function where(filter: TransactionFilter): SQL {
   return and(...parts)!;
 }
 
-export function queryTransactions(db: DB, filter: TransactionFilter): { rows: TransactionRow[]; total: number } {
+export function queryTransactions(
+  db: DB,
+  filter: TransactionFilter,
+): { rows: TransactionRow[]; total: number } {
   const order =
     filter.sort === "date_asc"
       ? [asc(transactions.date), asc(transactions.id)]
@@ -79,13 +82,23 @@ export function queryTransactions(db: DB, filter: TransactionFilter): { rows: Tr
       categoryVatCode: r.categoryVatCode,
       categoryKind: r.categoryKind,
     }));
-  const total = db.select({ n: sql<number>`count(*)` }).from(transactions).where(where(filter)).get()?.n ?? 0;
+  const total =
+    db
+      .select({ n: sql<number>`count(*)` })
+      .from(transactions)
+      .where(where(filter))
+      .get()?.n ?? 0;
   return { rows, total };
 }
 
 /** All transactions of an account (for analytics). */
 export function allTransactions(db: DB, accountId: number): Transaction[] {
-  return db.select().from(transactions).where(eq(transactions.accountId, accountId)).orderBy(asc(transactions.date)).all();
+  return db
+    .select()
+    .from(transactions)
+    .where(eq(transactions.accountId, accountId))
+    .orderBy(asc(transactions.date))
+    .all();
 }
 
 export interface TransactionDetails {
@@ -110,7 +123,11 @@ export interface ManualTransactionInput {
 }
 
 /** Adds a transaction that isn't in a bank file (cash, mileage, an invoice paid privately, ...). */
-export function addManualTransaction(db: DB, accountId: number, input: ManualTransactionInput): Transaction {
+export function addManualTransaction(
+  db: DB,
+  accountId: number,
+  input: ManualTransactionInput,
+): Transaction {
   const key = createHash("sha1")
     .update(`manual|${input.date}|${input.amount}|${Date.now()}|${Math.random()}`)
     .digest("hex")

@@ -7,7 +7,10 @@ import { TaxSettingsForm } from "./tax-settings-form";
 
 export const metadata = { title: "Tax settings" };
 
-export default async function TaxSettingsPage({ params, searchParams }: PageProps<"/accounts/[accountId]/tax/settings">) {
+export default async function TaxSettingsPage({
+  params,
+  searchParams,
+}: PageProps<"/accounts/[accountId]/tax/settings">) {
   const { accountId } = await params;
   const year = yearFromParams(await searchParams);
   const account = requireAccount(accountId);

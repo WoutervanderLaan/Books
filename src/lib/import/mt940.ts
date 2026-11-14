@@ -51,7 +51,8 @@ function accountIban(value: string): string | null {
 /** Parses SWIFT MT940 statements (ING, Rabobank, ABN AMRO, Triodos, ...). */
 export function parseMt940(text: string): ParseResult {
   const all = fields(text);
-  if (!all.some((f) => f.tag === "61")) throw new ImportError("No transactions (:61:) found in MT940 file.");
+  if (!all.some((f) => f.tag === "61"))
+    throw new ImportError("No transactions (:61:) found in MT940 file.");
 
   const transactions: ParsedTransaction[] = [];
   let iban: string | null = null;

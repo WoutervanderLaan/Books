@@ -44,22 +44,40 @@ function guessColumns(rows: string[][]) {
   const header = rows[0]?.map((h) => h.toLowerCase()) ?? [];
   const find = (re: RegExp) => header.findIndex((h) => re.test(h));
   return {
-    name: Math.max(0, find(/omschrijving|naam|post|item|name|description/) >= 0 ? find(/omschrijving|naam|post|item|name|description/) : name),
-    amount: find(/bedrag|amount|kosten|per maand|maand/) >= 0 ? find(/bedrag|amount|kosten|per maand|maand/) : Math.max(0, amount),
+    name: Math.max(
+      0,
+      find(/omschrijving|naam|post|item|name|description/) >= 0
+        ? find(/omschrijving|naam|post|item|name|description/)
+        : name,
+    ),
+    amount:
+      find(/bedrag|amount|kosten|per maand|maand/) >= 0
+        ? find(/bedrag|amount|kosten|per maand|maand/)
+        : Math.max(0, amount),
     category: find(/categorie|category|groep|group|soort/),
     frequency: find(/frequentie|frequency|periode|period|per$/),
     type: find(/^type$|vast|variabel|fixed/),
-    hasHeader: header.some((h) => /[a-z]{3,}/.test(h)) && tryAmount(rows[0]?.[Math.max(0, amount)]) == null,
+    hasHeader:
+      header.some((h) => /[a-z]{3,}/.test(h)) && tryAmount(rows[0]?.[Math.max(0, amount)]) == null,
   };
 }
 
 /** Imports budget lines from an Excel (.xlsx) or CSV overview. */
-export function SpreadsheetImport({ accountId, categories }: { accountId: number; categories: Category[] }) {
+export function SpreadsheetImport({
+  accountId,
+  categories,
+}: {
+  accountId: number;
+  categories: Category[];
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [sheets, setSheets] = useState<Sheet[] | null>(null);
   const [sheetIndex, setSheetIndex] = useState(0);
   const [cols, setCols] = useState<ReturnType<typeof guessColumns> | null>(null);
-  const [defaults, setDefaults] = useState<{ frequency: BudgetFrequency; type: BudgetType }>({ frequency: "monthly", type: "fixed" });
+  const [defaults, setDefaults] = useState<{ frequency: BudgetFrequency; type: BudgetType }>({
+    frequency: "monthly",
+    type: "fixed",
+  });
   const [overrides, setOverrides] = useState<Record<number, Partial<Draft>>>({});
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -75,13 +93,15 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
       const name = (r[cols.name] ?? "").trim();
       const amount = tryAmount(r[cols.amount]);
       if (!name || amount == null || amount === 0) return [];
-      const category = cols.category >= 0 ? matchCategory(r[cols.category] ?? "", categories) : null;
+      const category =
+        cols.category >= 0 ? matchCategory(r[cols.category] ?? "", categories) : null;
       const base: Draft = {
         // Totals rows are part of most budget sheets but aren't budget lines.
         include: !/^(sub)?(totaal|total|som|sum)\b/i.test(name),
         name,
         amount: Math.abs(amount),
-        frequency: (cols.frequency >= 0 ? parseFrequency(r[cols.frequency]) : null) ?? defaults.frequency,
+        frequency:
+          (cols.frequency >= 0 ? parseFrequency(r[cols.frequency]) : null) ?? defaults.frequency,
         type: (cols.type >= 0 ? parseBudgetType(r[cols.type]) : null) ?? defaults.type,
         categoryId: category?.id ?? matchCategory(name, categories)?.id ?? null,
       };
@@ -111,7 +131,13 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
     startTransition(async () => {
       const res = await importBudgetLinesAction(
         accountId,
-        selected.map(({ name, amount, frequency, type, categoryId }) => ({ name, amount, frequency, type, categoryId })),
+        selected.map(({ name, amount, frequency, type, categoryId }) => ({
+          name,
+          amount,
+          frequency,
+          type,
+          categoryId,
+        })),
       );
       if (res.ok) {
         setMessage({ text: res.message ?? "Imported." });
@@ -120,7 +146,12 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
       } else setMessage({ text: res.error, error: true });
     });
 
-  const columnSelect = (label: string, value: number, onChange: (v: number) => void, optional: boolean) => (
+  const columnSelect = (
+    label: string,
+    value: number,
+    onChange: (v: number) => void,
+    optional: boolean,
+  ) => (
     <Field label={label}>
       <Select value={value} onChange={(e) => onChange(Number(e.target.value))}>
         {optional ? <option value={-1}>— none —</option> : null}
@@ -138,13 +169,16 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
       <Button size="sm" onClick={() => dialog.current?.showModal()}>
         <FileSpreadsheet className="size-3.5" aria-hidden /> Import from Excel
       </Button>
-      <dialog ref={dialog} className="m-auto w-full max-w-4xl rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40">
+      <dialog
+        ref={dialog}
+        className="m-auto w-full max-w-4xl rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40"
+      >
         <div className="space-y-4 p-6">
           <div>
             <h2 className="text-base font-semibold">Import budget from a spreadsheet</h2>
             <p className="mt-1 text-sm text-ink-2">
-              Pick your Excel (.xlsx) or CSV overview, point out the name and amount columns, and check the categories. Nothing is saved until you
-              click import.
+              Pick your Excel (.xlsx) or CSV overview, point out the name and amount columns, and
+              check the categories. Nothing is saved until you click import.
             </p>
           </div>
           <input
@@ -153,7 +187,9 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
             onChange={(e) => e.target.files?.[0] && load(e.target.files[0])}
             className="block text-sm file:mr-3 file:rounded-lg file:border file:border-line-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:text-ink"
           />
-          {message ? <Notice tone={message.error ? "critical" : "good"}>{message.text}</Notice> : null}
+          {message ? (
+            <Notice tone={message.error ? "critical" : "good"}>{message.text}</Notice>
+          ) : null}
           {sheets && cols ? (
             <>
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -176,25 +212,59 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
                     </Select>
                   </Field>
                 ) : null}
-                {columnSelect("Name column", cols.name, (v) => setCols({ ...cols, name: v }), false)}
-                {columnSelect("Amount column", cols.amount, (v) => setCols({ ...cols, amount: v }), false)}
-                {columnSelect("Category column", cols.category, (v) => setCols({ ...cols, category: v }), true)}
-                {columnSelect("Frequency column", cols.frequency, (v) => setCols({ ...cols, frequency: v }), true)}
+                {columnSelect(
+                  "Name column",
+                  cols.name,
+                  (v) => setCols({ ...cols, name: v }),
+                  false,
+                )}
+                {columnSelect(
+                  "Amount column",
+                  cols.amount,
+                  (v) => setCols({ ...cols, amount: v }),
+                  false,
+                )}
+                {columnSelect(
+                  "Category column",
+                  cols.category,
+                  (v) => setCols({ ...cols, category: v }),
+                  true,
+                )}
+                {columnSelect(
+                  "Frequency column",
+                  cols.frequency,
+                  (v) => setCols({ ...cols, frequency: v }),
+                  true,
+                )}
                 <Field label="Default frequency">
-                  <Select value={defaults.frequency} onChange={(e) => setDefaults({ ...defaults, frequency: e.target.value as BudgetFrequency })}>
+                  <Select
+                    value={defaults.frequency}
+                    onChange={(e) =>
+                      setDefaults({ ...defaults, frequency: e.target.value as BudgetFrequency })
+                    }
+                  >
                     <option value="monthly">Per month</option>
                     <option value="quarterly">Per quarter</option>
                     <option value="yearly">Per year</option>
                   </Select>
                 </Field>
                 <Field label="Default type">
-                  <Select value={defaults.type} onChange={(e) => setDefaults({ ...defaults, type: e.target.value as BudgetType })}>
+                  <Select
+                    value={defaults.type}
+                    onChange={(e) =>
+                      setDefaults({ ...defaults, type: e.target.value as BudgetType })
+                    }
+                  >
                     <option value="fixed">Fixed</option>
                     <option value="variable">Estimate</option>
                   </Select>
                 </Field>
                 <label className="flex items-end gap-2 pb-2 text-sm text-ink-2">
-                  <input type="checkbox" checked={cols.hasHeader} onChange={(e) => setCols({ ...cols, hasHeader: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={cols.hasHeader}
+                    onChange={(e) => setCols({ ...cols, hasHeader: e.target.checked })}
+                  />
                   First row is a header
                 </label>
               </div>
@@ -215,23 +285,39 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
                   <tbody>
                     {drafts.map((d) => {
                       const row = (d as Draft & { _row: number })._row;
-                      const set = (patch: Partial<Draft>) => setOverrides({ ...overrides, [row]: { ...overrides[row], ...patch } });
+                      const set = (patch: Partial<Draft>) =>
+                        setOverrides({ ...overrides, [row]: { ...overrides[row], ...patch } });
                       return (
                         <tr key={row} className={d.include ? undefined : "opacity-50"}>
                           <td className={td}>
-                            <input type="checkbox" checked={d.include} onChange={(e) => set({ include: e.target.checked })} aria-label={`Include ${d.name}`} />
+                            <input
+                              type="checkbox"
+                              checked={d.include}
+                              onChange={(e) => set({ include: e.target.checked })}
+                              aria-label={`Include ${d.name}`}
+                            />
                           </td>
                           <td className={td}>{d.name}</td>
                           <td className={`${td} text-right tabular`}>{formatMoney(d.amount)}</td>
                           <td className={td}>
-                            <Select className="h-8 w-28 text-[13px]" value={d.frequency} onChange={(e) => set({ frequency: e.target.value as BudgetFrequency })}>
+                            <Select
+                              className="h-8 w-28 text-[13px]"
+                              value={d.frequency}
+                              onChange={(e) =>
+                                set({ frequency: e.target.value as BudgetFrequency })
+                              }
+                            >
                               <option value="monthly">Month</option>
                               <option value="quarterly">Quarter</option>
                               <option value="yearly">Year</option>
                             </Select>
                           </td>
                           <td className={td}>
-                            <Select className="h-8 w-28 text-[13px]" value={d.type} onChange={(e) => set({ type: e.target.value as BudgetType })}>
+                            <Select
+                              className="h-8 w-28 text-[13px]"
+                              value={d.type}
+                              onChange={(e) => set({ type: e.target.value as BudgetType })}
+                            >
                               <option value="fixed">Fixed</option>
                               <option value="variable">Estimate</option>
                             </Select>
@@ -240,7 +326,9 @@ export function SpreadsheetImport({ accountId, categories }: { accountId: number
                             <Select
                               className="h-8 text-[13px]"
                               value={d.categoryId ?? ""}
-                              onChange={(e) => set({ categoryId: e.target.value ? Number(e.target.value) : null })}
+                              onChange={(e) =>
+                                set({ categoryId: e.target.value ? Number(e.target.value) : null })
+                              }
                             >
                               <option value="">— Choose —</option>
                               <CategoryOptions categories={categories} />

@@ -25,7 +25,10 @@ export function CategoryForm({ category }: { category?: Category }) {
           <Plus className="size-4" aria-hidden /> New category
         </Button>
       )}
-      <dialog ref={dialog} className="m-auto w-full max-w-xl rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40">
+      <dialog
+        ref={dialog}
+        className="m-auto w-full max-w-xl rounded-xl border border-line bg-surface p-0 text-left text-ink shadow-xl backdrop:bg-black/40"
+      >
         <form action={action} className="space-y-4 p-6">
           <h2 className="text-base font-semibold">{category ? "Edit category" : "New category"}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -33,7 +36,12 @@ export function CategoryForm({ category }: { category?: Category }) {
               <Input name="name" required defaultValue={category?.name} />
             </Field>
             <Field label="Group" hint="Categories are grouped in reports">
-              <Input name="groupName" required defaultValue={category?.groupName} placeholder="e.g. Housing" />
+              <Input
+                name="groupName"
+                required
+                defaultValue={category?.groupName}
+                placeholder="e.g. Housing"
+              />
             </Field>
             <Field label="Type">
               <Select name="kind" defaultValue={category?.kind ?? "expense"}>
@@ -81,8 +89,17 @@ export function CategoryForm({ category }: { category?: Category }) {
                 ))}
               </Select>
             </Field>
-            <Field label="Deductible for income tax (%)" hint="E.g. 80 for meals and representation">
-              <Input name="deductiblePct" type="number" min={0} max={100} defaultValue={category?.deductiblePct ?? 100} />
+            <Field
+              label="Deductible for income tax (%)"
+              hint="E.g. 80 for meals and representation"
+            >
+              <Input
+                name="deductiblePct"
+                type="number"
+                min={0}
+                max={100}
+                defaultValue={category?.deductiblePct ?? 100}
+              />
             </Field>
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -103,7 +120,12 @@ export function CategoryForm({ category }: { category?: Category }) {
 export function ArchiveToggle({ id, archived }: { id: number; archived: boolean }) {
   const [pending, start] = useTransition();
   return (
-    <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(() => archiveCategoryAction(id, !archived))}>
+    <Button
+      size="sm"
+      variant="ghost"
+      disabled={pending}
+      onClick={() => start(() => archiveCategoryAction(id, !archived))}
+    >
       {archived ? "Restore" : "Archive"}
     </Button>
   );

@@ -21,7 +21,10 @@ export default async function RulesPage({ params }: PageProps<"/accounts/[accoun
       .where(
         or(
           eq(rules.accountId, account.id),
-          and(isNull(rules.accountId), or(isNull(rules.accountKind), eq(rules.accountKind, account.kind))),
+          and(
+            isNull(rules.accountId),
+            or(isNull(rules.accountKind), eq(rules.accountKind, account.kind)),
+          ),
         ),
       )
       .all(),
@@ -51,21 +54,36 @@ export default async function RulesPage({ params }: PageProps<"/accounts/[accoun
             <td className={td}>
               <p>{describeRule(r)}</p>
               <p className="text-xs text-muted">
-                {r.source === "auto" ? "Learned from your choice" : r.source === "user" ? "Created by you" : "Starter rule"}
+                {r.source === "auto"
+                  ? "Learned from your choice"
+                  : r.source === "user"
+                    ? "Created by you"
+                    : "Starter rule"}
                 {r.priority ? ` · priority ${r.priority}` : ""}
                 {r.vatCode ? ` · VAT ${r.vatCode}` : ""}
               </p>
             </td>
             <td className={td}>{names.get(r.categoryId) ?? "—"}</td>
-            <td className={`${td} text-ink-2`}>{r.accountId ? "This account" : `All ${r.accountKind ?? ""} accounts`}</td>
+            <td className={`${td} text-ink-2`}>
+              {r.accountId ? "This account" : `All ${r.accountKind ?? ""} accounts`}
+            </td>
             <td className={`${tdNum} text-ink-2`}>{r.timesApplied}</td>
             <td className={td}>
               <RuleToggle id={r.id} enabled={r.enabled} />
             </td>
             <td className={`${td} text-right`}>
               <div className="flex justify-end gap-1">
-                <RuleForm accountId={account.id} categories={categories} business={account.kind === "business"} rule={r} />
-                <ConfirmButton action={deleteRuleAction.bind(null, r.id)} confirm="Delete this rule?" variant="ghost">
+                <RuleForm
+                  accountId={account.id}
+                  categories={categories}
+                  business={account.kind === "business"}
+                  rule={r}
+                />
+                <ConfirmButton
+                  action={deleteRuleAction.bind(null, r.id)}
+                  confirm="Delete this rule?"
+                  variant="ghost"
+                >
                   Delete
                 </ConfirmButton>
               </div>
@@ -85,18 +103,29 @@ export default async function RulesPage({ params }: PageProps<"/accounts/[accoun
           action={
             <div className="flex flex-wrap gap-2">
               <ReapplyButtons accountId={account.id} />
-              <RuleForm accountId={account.id} categories={categories} business={account.kind === "business"} />
+              <RuleForm
+                accountId={account.id}
+                categories={categories}
+                business={account.kind === "business"}
+              />
             </div>
           }
         />
-        {own.length ? table(own) : <p className="px-5 pb-5 text-sm text-muted">No rules of your own yet.</p>}
+        {own.length ? (
+          table(own)
+        ) : (
+          <p className="px-5 pb-5 text-sm text-muted">No rules of your own yet.</p>
+        )}
       </Card>
       <Card>
         <details>
           <summary className="cursor-pointer list-none px-5 py-4">
             <span className="text-[15px] font-semibold text-ink">Starter rules</span>{" "}
             <Badge>{starter.length}</Badge>
-            <p className="mt-0.5 text-sm text-muted">Built-in rules for common Dutch shops and organisations. Your own rules always take precedence.</p>
+            <p className="mt-0.5 text-sm text-muted">
+              Built-in rules for common Dutch shops and organisations. Your own rules always take
+              precedence.
+            </p>
           </summary>
           {table(starter)}
         </details>

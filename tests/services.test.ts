@@ -11,14 +11,21 @@ import { commitImport, previewImport, undoImport } from "@/lib/services/imports"
 import { taxOverview } from "@/lib/services/tax";
 
 const parse = (name: string): ParseResult => {
-  const outcome = parseStatement(new Uint8Array(fs.readFileSync(path.join(__dirname, "fixtures", name))));
+  const outcome = parseStatement(
+    new Uint8Array(fs.readFileSync(path.join(__dirname, "fixtures", name))),
+  );
   if (!isParseResult(outcome)) throw new Error("needs mapping");
   return outcome;
 };
 
 let db: DB;
 const categoryId = (name: string, scope: "personal" | "business") =>
-  db.select().from(categories).where(eq(categories.name, name)).all().find((c) => c.scope === scope)!.id;
+  db
+    .select()
+    .from(categories)
+    .where(eq(categories.name, name))
+    .all()
+    .find((c) => c.scope === scope)!.id;
 
 beforeEach(() => {
   db = openDatabase(":memory:").db;
@@ -30,12 +37,21 @@ describe("import pipeline", () => {
     const parsed = parse("ing.csv");
 
     const preview = previewImport(db, account.id, parsed);
-    expect(preview).toMatchObject({ total: 3, newCount: 3, duplicateCount: 0, categorisedCount: 1 });
+    expect(preview).toMatchObject({
+      total: 3,
+      newCount: 3,
+      duplicateCount: 0,
+      categorisedCount: 1,
+    });
 
     const summary = commitImport(db, account.id, "ing.csv", parsed);
     expect(summary).toMatchObject({ inserted: 3, duplicates: 0, categorised: 1, uncategorised: 2 });
 
-    const groceries = db.select().from(transactions).all().find((t) => t.counterpartyName?.startsWith("Albert Heijn"))!;
+    const groceries = db
+      .select()
+      .from(transactions)
+      .all()
+      .find((t) => t.counterpartyName?.startsWith("Albert Heijn"))!;
     expect(groceries.categoryId).toBe(categoryId("Groceries", "personal"));
     expect(groceries.categorySource).toBe("rule");
 
@@ -66,26 +82,50 @@ describe("learning from manual categorisation", () => {
   it("creates an account rule and applies it to matching transactions", () => {
     const account = createAccount(db, { name: "Knab", kind: "business" });
     commitImport(db, account.id, "knab.csv", parse("knab.csv"));
-    const acme = db.select().from(transactions).all().find((t) => t.counterpartyName === "Acme BV")!;
+    const acme = db
+      .select()
+      .from(transactions)
+      .all()
+      .find((t) => t.counterpartyName === "Acme BV")!;
 
     const result = setCategoryManually(db, acme.id, categoryId("Revenue", "business"), true);
-    expect(result.rule).toMatchObject({ accountId: account.id, counterpartyIban: "NL91ABNA0417164300", source: "auto" });
+    expect(result.rule).toMatchObject({
+      accountId: account.id,
+      counterpartyIban: "NL91ABNA0417164300",
+      source: "auto",
+    });
 
     // A new invoice from the same client next month is recognised on import
     const next = parse("knab.csv");
-    next.transactions = next.transactions.map((t) => ({ ...t, date: t.date.replace("2024-01", "2024-02"), externalId: `${t.externalId}-feb` }));
+    next.transactions = next.transactions.map((t) => ({
+      ...t,
+      date: t.date.replace("2024-01", "2024-02"),
+      externalId: `${t.externalId}-feb`,
+    }));
     const summary = commitImport(db, account.id, "knab-feb.csv", next);
     expect(summary.categorised).toBe(2);
-    const feb = db.select().from(transactions).all().find((t) => t.date === "2024-02-16")!;
+    const feb = db
+      .select()
+      .from(transactions)
+      .all()
+      .find((t) => t.date === "2024-02-16")!;
     expect(feb.categoryId).toBe(categoryId("Revenue", "business"));
     expect(db.select().from(rules).where(eq(rules.source, "auto")).all()).toHaveLength(1);
   });
 
   it("recognises transfers between your own accounts", () => {
-    const personal = createAccount(db, { name: "ING", kind: "personal", iban: "NL69INGB0123456789" });
+    const personal = createAccount(db, {
+      name: "ING",
+      kind: "personal",
+      iban: "NL69INGB0123456789",
+    });
     createAccount(db, { name: "Savings", kind: "personal", iban: "NL20RABO0300065264" });
     commitImport(db, personal.id, "ing.csv", parse("ing.csv"));
-    const rent = db.select().from(transactions).all().find((t) => t.counterpartyIban === "NL20RABO0300065264")!;
+    const rent = db
+      .select()
+      .from(transactions)
+      .all()
+      .find((t) => t.counterpartyIban === "NL20RABO0300065264")!;
     expect(rent.categorySource).toBe("transfer");
     expect(rent.categoryId).toBe(categoryId("Internal transfer", "personal"));
   });
@@ -95,7 +135,11 @@ describe("tax overview", () => {
   it("builds VAT returns and a profit figure from a business account", () => {
     const account = createAccount(db, { name: "Knab", kind: "business" });
     commitImport(db, account.id, "knab.csv", parse("knab.csv"));
-    const acme = db.select().from(transactions).all().find((t) => t.counterpartyName === "Acme BV")!;
+    const acme = db
+      .select()
+      .from(transactions)
+      .all()
+      .find((t) => t.counterpartyName === "Acme BV")!;
     setCategoryManually(db, acme.id, categoryId("Revenue", "business"), true);
 
     const o = taxOverview(db, getAccount(db, account.id)!, 2024);

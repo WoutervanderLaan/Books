@@ -1,6 +1,15 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import type { DB } from "../db/connection";
-import { assets, categories, hoursEntries, taxYears, transactions, type Account, type Asset, type TaxYear } from "../db/schema";
+import {
+  assets,
+  categories,
+  hoursEntries,
+  taxYears,
+  transactions,
+  type Account,
+  type Asset,
+  type TaxYear,
+} from "../db/schema";
 import { daysBetween, todayIso, yearOf } from "../dates";
 import {
   bookValueAtEndOf,
@@ -29,7 +38,12 @@ export function getTaxYear(db: DB, accountId: number, year: number): TaxYear {
 export function updateTaxYear(
   db: DB,
   id: number,
-  patch: Partial<Pick<TaxYear, "isStarter" | "hoursCriterion" | "otherIncome" | "prepaidTax" | "params" | "notes">>,
+  patch: Partial<
+    Pick<
+      TaxYear,
+      "isStarter" | "hoursCriterion" | "otherIncome" | "prepaidTax" | "params" | "notes"
+    >
+  >,
 ) {
   db.update(taxYears).set(patch).where(eq(taxYears.id, id)).run();
 }
@@ -40,12 +54,23 @@ export function listHours(db: DB, accountId: number, year: number) {
   return db
     .select()
     .from(hoursEntries)
-    .where(and(eq(hoursEntries.accountId, accountId), sql`substr(${hoursEntries.date}, 1, 4) = ${String(year)}`))
+    .where(
+      and(
+        eq(hoursEntries.accountId, accountId),
+        sql`substr(${hoursEntries.date}, 1, 4) = ${String(year)}`,
+      ),
+    )
     .orderBy(asc(hoursEntries.date))
     .all();
 }
 
-export function addHours(db: DB, accountId: number, date: string, hours: number, description: string | null) {
+export function addHours(
+  db: DB,
+  accountId: number,
+  date: string,
+  hours: number,
+  description: string | null,
+) {
   db.insert(hoursEntries).values({ accountId, date, hours, description }).run();
 }
 
@@ -56,14 +81,22 @@ export function deleteHours(db: DB, id: number) {
 // --- Assets --------------------------------------------------------------------------
 
 export function listAssets(db: DB, accountId: number): Asset[] {
-  return db.select().from(assets).where(eq(assets.accountId, accountId)).orderBy(asc(assets.purchaseDate)).all();
+  return db
+    .select()
+    .from(assets)
+    .where(eq(assets.accountId, accountId))
+    .orderBy(asc(assets.purchaseDate))
+    .all();
 }
 
 export type AssetInput = Omit<Asset, "id" | "accountId">;
 
 export function saveAsset(db: DB, accountId: number, input: AssetInput, id?: number) {
   if (id) db.update(assets).set(input).where(eq(assets.id, id)).run();
-  else db.insert(assets).values({ ...input, accountId }).run();
+  else
+    db.insert(assets)
+      .values({ ...input, accountId })
+      .run();
 }
 
 export function deleteAsset(db: DB, id: number) {
@@ -150,7 +183,8 @@ export function taxOverview(db: DB, account: Account, year: number): TaxOverview
   // For the running year, being on track counts so the estimate reflects the full year.
   const hoursCriterionMet =
     taxYear.hoursCriterion === "yes" ||
-    (taxYear.hoursCriterion === "auto" && (hours >= params.urencriterium || (hoursProjected ?? 0) >= params.urencriterium));
+    (taxYear.hoursCriterion === "auto" &&
+      (hours >= params.urencriterium || (hoursProjected ?? 0) >= params.urencriterium));
 
   const estimate = estimateIncomeTax({
     profit: pnl.profit,
@@ -163,7 +197,9 @@ export function taxOverview(db: DB, account: Account, year: number): TaxOverview
 
   const inYear = txs.filter((t) => yearOf(taxDateOf(t)) === year);
   const sumRole = (role: string, pred: (amount: number) => boolean = () => true) =>
-    inYear.filter((t) => t.categoryRole === role && pred(t.amount)).reduce((s, t) => s + t.amount, 0);
+    inYear
+      .filter((t) => t.categoryRole === role && pred(t.amount))
+      .reduce((s, t) => s + t.amount, 0);
   const incomeTaxPaid = -sumRole("income_tax") + taxYear.prepaidTax;
 
   const years = new Set(txs.map((t) => yearOf(taxDateOf(t))));

@@ -49,7 +49,8 @@ const ing: CsvPreset = {
   parse(rows, h) {
     const col = columnGetter(rows[h]);
     const body = dataRows(rows, h);
-    const format = guessDateFormat(body.slice(0, 20).map((r) => col(r, "datum", "date"))) ?? "YYYYMMDD";
+    const format =
+      guessDateFormat(body.slice(0, 20).map((r) => col(r, "datum", "date"))) ?? "YYYYMMDD";
     return body.map((r) => {
       const sign = /^(af|debit)$/i.test(col(r, "af bij", "debit/credit")) ? -1 : 1;
       const amount = Math.abs(parseAmount(col(r, "bedrag (eur)", "amount (eur)"), ",")) * sign;
@@ -88,7 +89,8 @@ const RABO_CODES: Record<string, string> = {
 const rabobank: CsvPreset = {
   id: "rabobank",
   label: "Rabobank (CSV)",
-  detect: (rows) => findHeader(rows, ["iban/bban", "volgnr", "datum", "bedrag", "naam tegenpartij"]),
+  detect: (rows) =>
+    findHeader(rows, ["iban/bban", "volgnr", "datum", "bedrag", "naam tegenpartij"]),
   parse(rows, h) {
     const col = columnGetter(rows[h]);
     return dataRows(rows, h).map((r) => {
@@ -102,8 +104,7 @@ const rabobank: CsvPreset = {
         date: parseDate(col(r, "datum"), "YYYY-MM-DD"),
         amount: parseAmount(col(r, "bedrag"), ","),
         currency: col(r, "munt") || "EUR",
-        counterpartyName:
-          col(r, "naam tegenpartij") || col(r, "naam uiteindelijke partij") || null,
+        counterpartyName: col(r, "naam tegenpartij") || col(r, "naam uiteindelijke partij") || null,
         counterpartyIban: normalizeIban(col(r, "tegenrekening iban/bban")),
         description,
         txType: RABO_CODES[code] ?? (code || null),
@@ -118,7 +119,16 @@ const rabobank: CsvPreset = {
 const bunq: CsvPreset = {
   id: "bunq",
   label: "bunq (CSV)",
-  detect: (rows) => findHeader(rows, ["date", "interest date", "amount", "account", "counterparty", "name", "description"]),
+  detect: (rows) =>
+    findHeader(rows, [
+      "date",
+      "interest date",
+      "amount",
+      "account",
+      "counterparty",
+      "name",
+      "description",
+    ]),
   parse(rows, h) {
     const col = columnGetter(rows[h]);
     const body = dataRows(rows, h);
@@ -141,11 +151,19 @@ const bunq: CsvPreset = {
 const knab: CsvPreset = {
   id: "knab",
   label: "Knab (CSV)",
-  detect: (rows) => findHeader(rows, ["rekeningnummer", "transactiedatum", "creditdebet", "bedrag", "tegenrekeninghouder"]),
+  detect: (rows) =>
+    findHeader(rows, [
+      "rekeningnummer",
+      "transactiedatum",
+      "creditdebet",
+      "bedrag",
+      "tegenrekeninghouder",
+    ]),
   parse(rows, h) {
     const col = columnGetter(rows[h]);
     const body = dataRows(rows, h);
-    const format = guessDateFormat(body.slice(0, 20).map((r) => col(r, "transactiedatum"))) ?? "DD-MM-YYYY";
+    const format =
+      guessDateFormat(body.slice(0, 20).map((r) => col(r, "transactiedatum"))) ?? "DD-MM-YYYY";
     return body.map((r) => {
       const sign = /^d/i.test(col(r, "creditdebet")) ? -1 : 1;
       return {
@@ -164,7 +182,8 @@ const knab: CsvPreset = {
   },
 };
 
-const isIbanLike = (s: string | undefined) => !!s && /^[A-Z]{2}\d{2}[A-Z0-9]{8,30}$/.test(s.replace(/\s/g, ""));
+const isIbanLike = (s: string | undefined) =>
+  !!s && /^[A-Z]{2}\d{2}[A-Z0-9]{8,30}$/.test(s.replace(/\s/g, ""));
 
 /** ABN AMRO "TXT" export: tab separated, no header, 8 columns. */
 const abnAmro: CsvPreset = {
@@ -172,7 +191,11 @@ const abnAmro: CsvPreset = {
   label: "ABN AMRO (TXT)",
   detect: (rows) => {
     const r = rows[0];
-    return r && r.length >= 8 && /^[A-Z]{3}$/.test(r[1]?.trim()) && /^\d{8}$/.test(r[2]?.trim()) && /^\d{8}$/.test(r[5]?.trim())
+    return r &&
+      r.length >= 8 &&
+      /^[A-Z]{3}$/.test(r[1]?.trim()) &&
+      /^\d{8}$/.test(r[2]?.trim()) &&
+      /^\d{8}$/.test(r[5]?.trim())
       ? -1
       : null;
   },
@@ -201,7 +224,12 @@ const volksbank: CsvPreset = {
   label: "ASN / SNS / RegioBank (CSV)",
   detect: (rows) => {
     const r = rows[0];
-    return r && r.length >= 18 && /^\d{2}-\d{2}-\d{4}$/.test(r[0]?.trim()) && isIbanLike(r[1]?.trim()) ? -1 : null;
+    return r &&
+      r.length >= 18 &&
+      /^\d{2}-\d{2}-\d{4}$/.test(r[0]?.trim()) &&
+      isIbanLike(r[1]?.trim())
+      ? -1
+      : null;
   },
   parse(rows) {
     return dataRows(rows, -1).map((r) => {

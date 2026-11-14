@@ -38,7 +38,20 @@ export function createAccount(db: DB, input: AccountInput): Account {
 export function updateAccount(
   db: DB,
   id: number,
-  patch: Partial<Pick<Account, "name" | "iban" | "description" | "openingBalance" | "autoBalance" | "vatKor" | "isSavings" | "archived" | "csvMapping">>,
+  patch: Partial<
+    Pick<
+      Account,
+      | "name"
+      | "iban"
+      | "description"
+      | "openingBalance"
+      | "autoBalance"
+      | "vatKor"
+      | "isSavings"
+      | "archived"
+      | "csvMapping"
+    >
+  >,
 ) {
   const values = { ...patch };
   if ("iban" in values) values.iban = normalizeIban(values.iban);
@@ -96,7 +109,11 @@ export function allCategories(db: DB): Category[] {
  * Keeps the opening balance consistent with a bank-reported balance:
  * opening = reported balance − sum of all transactions up to that date.
  */
-export function syncOpeningBalance(db: DB, accountId: number, closing: { date: string; amount: number }) {
+export function syncOpeningBalance(
+  db: DB,
+  accountId: number,
+  closing: { date: string; amount: number },
+) {
   const account = getAccount(db, accountId);
   if (!account?.autoBalance) return;
   const latest = db

@@ -10,7 +10,10 @@ import { ImportWizard } from "./import-wizard";
 export const metadata = { title: "Import" };
 
 const BANK_TIPS: [bank: string, tip: string][] = [
-  ["ING", "Mijn ING → your account → ‘Af- en bijschrijvingen downloaden’ → CSV (puntkomma) or CAMT.053."],
+  [
+    "ING",
+    "Mijn ING → your account → ‘Af- en bijschrijvingen downloaden’ → CSV (puntkomma) or CAMT.053.",
+  ],
   ["Rabobank", "Rekeningen → ‘Transacties downloaden’ → CSV or CAMT.053."],
   ["ABN AMRO", "Rekeningen → ‘Mutaties downloaden’ → TXT (tab-separated), CAMT.053 or MT940."],
   ["bunq", "App → account → ‘Export statement’ → CSV."],
@@ -27,7 +30,10 @@ export default async function ImportPage({ params }: PageProps<"/accounts/[accou
       <div className="min-w-0 space-y-6">
         <ImportWizard accountId={account.id} hasSavedMapping={!!account.csvMapping} />
         <Card>
-          <CardHeader title="Import history" description="Undo an import to remove exactly the transactions it added." />
+          <CardHeader
+            title="Import history"
+            description="Undo an import to remove exactly the transactions it added."
+          />
           {history.length ? (
             <Table>
               <thead>
@@ -50,13 +56,20 @@ export default async function ImportPage({ params }: PageProps<"/accounts/[accou
                       <p className="text-xs text-muted">{imp.format}</p>
                     </td>
                     <td className={`${td} whitespace-nowrap text-ink-2`}>
-                      {imp.dateFrom ? `${formatDate(imp.dateFrom)} – ${formatDate(imp.dateTo ?? imp.dateFrom)}` : "—"}
+                      {imp.dateFrom
+                        ? `${formatDate(imp.dateFrom)} – ${formatDate(imp.dateTo ?? imp.dateFrom)}`
+                        : "—"}
                     </td>
                     <td className={tdNum}>{imp.insertedRows}</td>
                     <td className={`${tdNum} text-ink-2`}>{imp.duplicateRows}</td>
-                    <td className={`${td} whitespace-nowrap text-ink-2`}>{formatDate(imp.importedAt.slice(0, 10))}</td>
+                    <td className={`${td} whitespace-nowrap text-ink-2`}>
+                      {formatDate(imp.importedAt.slice(0, 10))}
+                    </td>
                     <td className={`${td} text-right`}>
-                      <ConfirmButton action={undoImportAction.bind(null, imp.id)} confirm={`Remove the ${imp.insertedRows} transactions added by this import?`}>
+                      <ConfirmButton
+                        action={undoImportAction.bind(null, imp.id)}
+                        confirm={`Remove the ${imp.insertedRows} transactions added by this import?`}
+                      >
                         Undo
                       </ConfirmButton>
                     </td>
@@ -89,7 +102,8 @@ export default async function ImportPage({ params }: PageProps<"/accounts/[accou
             ))}
           </dl>
           <p className="mt-3 text-xs text-muted">
-            Overlapping periods are fine: transactions already imported are skipped. Stick to one file format per account for the most reliable duplicate detection.
+            Overlapping periods are fine: transactions already imported are skipped. Stick to one
+            file format per account for the most reliable duplicate detection.
           </p>
         </Card>
       </aside>

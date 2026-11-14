@@ -1,12 +1,35 @@
 "use server";
 
-import { bool, errorMessage, isIsoDate, oneOf, optInt, optMoney, optNumber, optStr, str, type ActionResult } from "@/lib/form";
+import {
+  bool,
+  errorMessage,
+  isIsoDate,
+  oneOf,
+  optInt,
+  optMoney,
+  optNumber,
+  optStr,
+  str,
+  type ActionResult,
+} from "@/lib/form";
 import { getDb } from "@/lib/server";
-import { addHours, deleteAsset, deleteHours, getTaxYear, saveAsset, updateTaxYear } from "@/lib/services/tax";
+import {
+  addHours,
+  deleteAsset,
+  deleteHours,
+  getTaxYear,
+  saveAsset,
+  updateTaxYear,
+} from "@/lib/services/tax";
 import { builtInParams, getPath, paramFields } from "@/lib/tax/params";
 import { refreshAll } from "./revalidate";
 
-export async function updateTaxYearAction(accountId: number, year: number, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function updateTaxYearAction(
+  accountId: number,
+  year: number,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const db = getDb();
   const taxYear = getTaxYear(db, accountId, year);
   // Only store parameters that differ from the built-in table.
@@ -30,11 +53,16 @@ export async function updateTaxYearAction(accountId: number, year: number, _prev
   return { ok: true, message: "Tax settings saved." };
 }
 
-export async function addHoursAction(accountId: number, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function addHoursAction(
+  accountId: number,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const date = str(fd, "date");
   const hours = optNumber(fd, "hours");
   if (!isIsoDate(date)) return { ok: false, error: "Enter a date." };
-  if (hours == null || hours <= 0 || hours > 24 * 31) return { ok: false, error: "Enter the number of hours." };
+  if (hours == null || hours <= 0 || hours > 24 * 31)
+    return { ok: false, error: "Enter the number of hours." };
   addHours(getDb(), accountId, date, hours, optStr(fd, "description"));
   refreshAll();
   return { ok: true, message: "Hours added." };
@@ -45,13 +73,19 @@ export async function deleteHoursAction(id: number): Promise<void> {
   refreshAll();
 }
 
-export async function saveAssetAction(accountId: number, assetId: number | null, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function saveAssetAction(
+  accountId: number,
+  assetId: number | null,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const name = str(fd, "name");
   const purchaseDate = str(fd, "purchaseDate");
   const cost = optMoney(fd, "cost");
   if (!name) return { ok: false, error: "Name is required." };
   if (!isIsoDate(purchaseDate)) return { ok: false, error: "Enter the purchase date." };
-  if (cost == null || cost <= 0) return { ok: false, error: "Enter the purchase price (excl. VAT)." };
+  if (cost == null || cost <= 0)
+    return { ok: false, error: "Enter the purchase price (excl. VAT)." };
   const disposed = str(fd, "disposedDate");
   try {
     saveAsset(

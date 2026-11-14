@@ -11,7 +11,10 @@ import { HoursForm } from "./hours-form";
 
 export const metadata = { title: "Hours" };
 
-export default async function HoursPage({ params, searchParams }: PageProps<"/accounts/[accountId]/tax/hours">) {
+export default async function HoursPage({
+  params,
+  searchParams,
+}: PageProps<"/accounts/[accountId]/tax/hours">) {
   const { accountId } = await params;
   const year = yearFromParams(await searchParams);
   const account = requireAccount(accountId);
@@ -21,12 +24,23 @@ export default async function HoursPage({ params, searchParams }: PageProps<"/ac
   const target = o.params.urencriterium;
 
   const byMonth = new Map<string, number>();
-  for (const e of entries) byMonth.set(monthOf(e.date), (byMonth.get(monthOf(e.date)) ?? 0) + e.hours);
+  for (const e of entries)
+    byMonth.set(monthOf(e.date), (byMonth.get(monthOf(e.date)) ?? 0) + e.hours);
 
   // Pace: hours needed per remaining week to reach the criterion.
   const today = todayIso();
   const endOfYear = `${year}-12-31`;
-  const weeksLeft = today > endOfYear ? 0 : Math.max(1, Math.ceil((Date.parse(endOfYear) - Date.parse(today > `${year}-01-01` ? today : `${year}-01-01`)) / (7 * 86_400_000)));
+  const weeksLeft =
+    today > endOfYear
+      ? 0
+      : Math.max(
+          1,
+          Math.ceil(
+            (Date.parse(endOfYear) -
+              Date.parse(today > `${year}-01-01` ? today : `${year}-01-01`)) /
+              (7 * 86_400_000),
+          ),
+        );
   const remaining = Math.max(0, target - o.hours);
 
   return (
@@ -35,11 +49,17 @@ export default async function HoursPage({ params, searchParams }: PageProps<"/ac
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-6">
           <Card>
-            <CardHeader title={`Hours criterion ${year}`} description="Time spent on your business, including acquisition, admin and travel — not just billable hours." />
+            <CardHeader
+              title={`Hours criterion ${year}`}
+              description="Time spent on your business, including acquisition, admin and travel — not just billable hours."
+            />
             <CardBody className="space-y-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-2xl font-semibold text-ink">
-                  {formatNumber(o.hours)} <span className="text-base font-normal text-ink-2">/ {formatNumber(target, 0)} hours</span>
+                  {formatNumber(o.hours)}{" "}
+                  <span className="text-base font-normal text-ink-2">
+                    / {formatNumber(target, 0)} hours
+                  </span>
                 </p>
                 <p className="text-sm text-ink-2">
                   {remaining === 0
@@ -73,7 +93,11 @@ export default async function HoursPage({ params, searchParams }: PageProps<"/ac
                       <td className={td}>{e.description ?? ""}</td>
                       <td className={tdNum}>{formatNumber(e.hours, 2)}</td>
                       <td className={`${td} text-right`}>
-                        <ConfirmButton action={deleteHoursAction.bind(null, e.id)} confirm="Delete this entry?" variant="ghost">
+                        <ConfirmButton
+                          action={deleteHoursAction.bind(null, e.id)}
+                          confirm="Delete this entry?"
+                          variant="ghost"
+                        >
                           Delete
                         </ConfirmButton>
                       </td>
@@ -82,7 +106,10 @@ export default async function HoursPage({ params, searchParams }: PageProps<"/ac
                 </tbody>
               </Table>
             ) : (
-              <p className="px-5 pb-5 text-sm text-muted">No hours logged for {year}. Log per day, per week or per month — whatever you can document.</p>
+              <p className="px-5 pb-5 text-sm text-muted">
+                No hours logged for {year}. Log per day, per week or per month — whatever you can
+                document.
+              </p>
             )}
           </Card>
         </div>
@@ -90,7 +117,10 @@ export default async function HoursPage({ params, searchParams }: PageProps<"/ac
           <Card>
             <CardHeader title="Log hours" />
             <CardBody>
-              <HoursForm accountId={account.id} defaultDate={today.startsWith(String(year)) ? today : `${year}-12-31`} />
+              <HoursForm
+                accountId={account.id}
+                defaultDate={today.startsWith(String(year)) ? today : `${year}-12-31`}
+              />
             </CardBody>
           </Card>
           {byMonth.size ? (

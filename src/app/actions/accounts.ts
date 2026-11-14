@@ -8,7 +8,10 @@ import { ACCOUNT_KINDS } from "@/lib/types";
 import { relinkOwnTransfers } from "@/lib/services/transfers";
 import { refreshAll } from "./revalidate";
 
-export async function createAccountAction(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function createAccountAction(
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const name = str(fd, "name");
   if (!name) return { ok: false, error: "Give the account a name." };
   const type = str(fd, "kind");
@@ -30,7 +33,11 @@ export async function createAccountAction(_prev: ActionResult | null, fd: FormDa
   redirect(`/accounts/${id}/import`);
 }
 
-export async function updateAccountAction(accountId: number, _prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function updateAccountAction(
+  accountId: number,
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const db = getDb();
   const account = getAccount(db, accountId);
   if (!account) return { ok: false, error: "Account not found." };
@@ -51,7 +58,10 @@ export async function updateAccountAction(accountId: number, _prev: ActionResult
   refreshAll();
   const parts = ["Saved."];
   if (linked) parts.push(`${linked} transactions recognised as transfers between your accounts.`);
-  if (review) parts.push(`${review} transactions you categorised yourself look like own transfers — see Own transfers.`);
+  if (review)
+    parts.push(
+      `${review} transactions you categorised yourself look like own transfers — see Own transfers.`,
+    );
   return { ok: true, message: parts.join(" ") };
 }
 

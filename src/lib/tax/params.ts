@@ -32,7 +32,15 @@ export interface NlTaxParams {
   zvwRate: number;
   zvwMaxIncome: number;
   /** Kleinschaligheidsinvesteringsaftrek */
-  kia: { minTotal: number; pctUpTo: number; pct: number; fixedUpTo: number; fixed: number; zeroFrom: number; decreaseRate: number };
+  kia: {
+    minTotal: number;
+    pctUpTo: number;
+    pct: number;
+    fixedUpTo: number;
+    fixed: number;
+    zeroFrom: number;
+    decreaseRate: number;
+  };
   minAssetValue: number;
   kmAllowance: number;
 }
@@ -61,7 +69,15 @@ const BUILT_IN: NlTaxParams[] = [
     ],
     zvwRate: 0.0532,
     zvwMaxIncome: 71628,
-    kia: { minTotal: 2801, pctUpTo: 69765, pct: 0.28, fixedUpTo: 129194, fixed: 19535, zeroFrom: 387580, decreaseRate: 0.0756 },
+    kia: {
+      minTotal: 2801,
+      pctUpTo: 69765,
+      pct: 0.28,
+      fixedUpTo: 129194,
+      fixed: 19535,
+      zeroFrom: 387580,
+      decreaseRate: 0.0756,
+    },
     minAssetValue: 450,
     kmAllowance: 0.23,
   },
@@ -89,7 +105,15 @@ const BUILT_IN: NlTaxParams[] = [
     ],
     zvwRate: 0.0526,
     zvwMaxIncome: 75864,
-    kia: { minTotal: 2901, pctUpTo: 70602, pct: 0.28, fixedUpTo: 130744, fixed: 19769, zeroFrom: 392230, decreaseRate: 0.0756 },
+    kia: {
+      minTotal: 2901,
+      pctUpTo: 70602,
+      pct: 0.28,
+      fixedUpTo: 130744,
+      fixed: 19769,
+      zeroFrom: 392230,
+      decreaseRate: 0.0756,
+    },
     minAssetValue: 450,
     kmAllowance: 0.23,
   },
@@ -118,7 +142,15 @@ const BUILT_IN: NlTaxParams[] = [
     ],
     zvwRate: 0.0485,
     zvwMaxIncome: 79409,
-    kia: { minTotal: 2901, pctUpTo: 70602, pct: 0.28, fixedUpTo: 130744, fixed: 19769, zeroFrom: 392230, decreaseRate: 0.0756 },
+    kia: {
+      minTotal: 2901,
+      pctUpTo: 70602,
+      pct: 0.28,
+      fixedUpTo: 130744,
+      fixed: 19769,
+      zeroFrom: 392230,
+      decreaseRate: 0.0756,
+    },
     minAssetValue: 450,
     kmAllowance: 0.23,
   },
@@ -156,17 +188,35 @@ export function paramFields(p: NlTaxParams): ParamField[] {
     { path: "mkbWinstvrijstelling", label: "MKB-winstvrijstelling", unit: "pct" },
   ];
   p.box1.forEach((b, i) => {
-    if (b.upTo != null) fields.push({ path: `box1.${i}.upTo`, label: `Box 1 bracket ${i + 1} up to`, unit: "eur" });
+    if (b.upTo != null)
+      fields.push({ path: `box1.${i}.upTo`, label: `Box 1 bracket ${i + 1} up to`, unit: "eur" });
     fields.push({ path: `box1.${i}.rate`, label: `Box 1 bracket ${i + 1} rate`, unit: "pct" });
   });
   fields.push(
     { path: "algemeneHeffingskorting.max", label: "General tax credit (max)", unit: "eur" },
-    { path: "algemeneHeffingskorting.phaseOutFrom", label: "General tax credit phase-out from", unit: "eur" },
-    { path: "algemeneHeffingskorting.phaseOutRate", label: "General tax credit phase-out rate", unit: "pct" },
+    {
+      path: "algemeneHeffingskorting.phaseOutFrom",
+      label: "General tax credit phase-out from",
+      unit: "eur",
+    },
+    {
+      path: "algemeneHeffingskorting.phaseOutRate",
+      label: "General tax credit phase-out rate",
+      unit: "pct",
+    },
   );
   p.arbeidskorting.forEach((s, i) => {
-    if (s.upTo != null) fields.push({ path: `arbeidskorting.${i}.upTo`, label: `Labour tax credit step ${i + 1} up to`, unit: "eur" });
-    fields.push({ path: `arbeidskorting.${i}.rate`, label: `Labour tax credit step ${i + 1} rate`, unit: "pct" });
+    if (s.upTo != null)
+      fields.push({
+        path: `arbeidskorting.${i}.upTo`,
+        label: `Labour tax credit step ${i + 1} up to`,
+        unit: "eur",
+      });
+    fields.push({
+      path: `arbeidskorting.${i}.rate`,
+      label: `Labour tax credit step ${i + 1} rate`,
+      unit: "pct",
+    });
   });
   fields.push(
     { path: "zvwRate", label: "Zvw contribution rate", unit: "pct" },
@@ -184,7 +234,9 @@ export function paramFields(p: NlTaxParams): ParamField[] {
 }
 
 export function getPath(obj: unknown, path: string): number {
-  return path.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj) as number;
+  return path
+    .split(".")
+    .reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj) as number;
 }
 
 function setPath(obj: unknown, path: string, value: number) {
@@ -199,7 +251,10 @@ function setPath(obj: unknown, path: string, value: number) {
 }
 
 /** Built-in parameters with the user's overrides applied. */
-export function resolveParams(year: number, overrides?: Record<string, unknown> | null): NlTaxParams {
+export function resolveParams(
+  year: number,
+  overrides?: Record<string, unknown> | null,
+): NlTaxParams {
   const params = builtInParams(year);
   if (overrides) {
     for (const [path, value] of Object.entries(overrides)) {

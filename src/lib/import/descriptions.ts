@@ -2,9 +2,34 @@ import { collapseWhitespace, normalizeIban } from "../text";
 
 /** Tags used in structured SEPA descriptions (MT940 :86: fields, ABN AMRO exports). */
 const TAGS = [
-  "TRTP", "CSID", "NAME", "MARF", "REMI", "IBAN", "BIC", "EREF", "ORDP", "BENM",
-  "CNTP", "ULTC", "ULTD", "ULTB", "PURP", "RTRN", "ISDT", "PREF", "SVCL", "ADDR",
-  "CHGS", "EXCH", "FEES", "OCMT", "BUSP", "TRCD", "BYOR", "PYID",
+  "TRTP",
+  "CSID",
+  "NAME",
+  "MARF",
+  "REMI",
+  "IBAN",
+  "BIC",
+  "EREF",
+  "ORDP",
+  "BENM",
+  "CNTP",
+  "ULTC",
+  "ULTD",
+  "ULTB",
+  "PURP",
+  "RTRN",
+  "ISDT",
+  "PREF",
+  "SVCL",
+  "ADDR",
+  "CHGS",
+  "EXCH",
+  "FEES",
+  "OCMT",
+  "BUSP",
+  "TRCD",
+  "BYOR",
+  "PYID",
 ];
 const TAG_RE = new RegExp(`/(${TAGS.join("|")})/`, "g");
 
@@ -32,7 +57,12 @@ export interface DescriptionParts {
 function remittance(remi: string | undefined): string {
   if (!remi) return "";
   // "USTD//free text" or "STRD/CUR/1234567890"
-  return collapseWhitespace(remi.replace(/^USTD\/\//, "").replace(/^STRD\/\w+\//, "").replace(/\/+$/, ""));
+  return collapseWhitespace(
+    remi
+      .replace(/^USTD\/\//, "")
+      .replace(/^STRD\/\w+\//, "")
+      .replace(/\/+$/, ""),
+  );
 }
 
 /** Interprets structured tag fields from MT940 / ABN AMRO descriptions. */
@@ -49,7 +79,9 @@ export function fromTaggedFields(fields: Record<string, string>): DescriptionPar
   if (fields.NAME) name = fields.NAME.trim();
   if (!name && fields.ULTC) name = fields.ULTC.split("/")[0]?.trim() || null;
   if (!name && fields.ULTD) name = fields.ULTD.split("/")[0]?.trim() || null;
-  const description = remittance(fields.REMI) || collapseWhitespace(fields.EREF && fields.EREF !== "NOTPROVIDED" ? fields.EREF : "");
+  const description =
+    remittance(fields.REMI) ||
+    collapseWhitespace(fields.EREF && fields.EREF !== "NOTPROVIDED" ? fields.EREF : "");
   return {
     counterpartyName: name ? collapseWhitespace(name) : null,
     counterpartyIban: iban,
@@ -88,7 +120,9 @@ export function parseAbnDescription(raw: string): DescriptionParts {
     };
   }
 
-  const card = text.match(/^(BEA|GEA|eCom)[,\s]+(?:Betaalpas|Apple Pay|Google Pay|Garmin Pay|Fitbit Pay)?\s*(.+?)(?:,PAS\d+|\s{2,}|$)/i);
+  const card = text.match(
+    /^(BEA|GEA|eCom)[,\s]+(?:Betaalpas|Apple Pay|Google Pay|Garmin Pay|Fitbit Pay)?\s*(.+?)(?:,PAS\d+|\s{2,}|$)/i,
+  );
   if (card) {
     const kind = card[1].toUpperCase();
     return {
@@ -99,7 +133,12 @@ export function parseAbnDescription(raw: string): DescriptionParts {
     };
   }
 
-  return { counterpartyName: null, counterpartyIban: null, description: collapseWhitespace(text), txType: null };
+  return {
+    counterpartyName: null,
+    counterpartyIban: null,
+    description: collapseWhitespace(text),
+    txType: null,
+  };
 }
 
 /** Extracts the "Omschrijving:" part of an ING "Mededelingen" field and drops noise. */

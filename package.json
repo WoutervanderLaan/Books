@@ -12,7 +12,9 @@
     "demo": "tsx scripts/demo.ts",
     "dev:demo": "node scripts/next.mjs dev -H 127.0.0.1 -p 3001 --demo",
     "start:demo": "node scripts/next.mjs start -H 127.0.0.1 -p 3001 --demo",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -38,6 +40,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "prettier": "3.10.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

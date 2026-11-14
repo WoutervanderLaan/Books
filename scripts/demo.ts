@@ -35,13 +35,17 @@ const rand = () => {
 const between = (min: number, max: number) => Math.round((min + rand() * (max - min)) * 100);
 const pick = <T>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
 const pad = (n: number) => String(n).padStart(2, "0");
-const day = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(Math.min(d, new Date(Date.UTC(y, m, 0)).getUTCDate()))}`;
+const day = (y: number, m: number, d: number) =>
+  `${y}-${pad(m)}-${pad(Math.min(d, new Date(Date.UTC(y, m, 0)).getUTCDate()))}`;
 
 const PERSONAL_IBAN = "NL69INGB0123456789";
 const SAVINGS_IBAN = "NL55INGB0000000003";
 const BUSINESS_IBAN = "NL12KNAB0123456789";
 
-type Row = Omit<ParsedTransaction, "currency" | "externalId" | "balanceAfter" | "accountIban" | "txType"> & { txType?: string };
+type Row = Omit<
+  ParsedTransaction,
+  "currency" | "externalId" | "balanceAfter" | "accountIban" | "txType"
+> & { txType?: string };
 
 function months(from: string, to: string): [number, number][] {
   const out: [number, number][] = [];
@@ -63,7 +67,14 @@ function toParseResult(rows: Row[], iban: string, opening: number): ParseResult 
   let balance = opening;
   const txs: ParsedTransaction[] = sorted.map((r) => {
     balance += r.amount;
-    return { ...r, txType: r.txType ?? null, currency: "EUR", externalId: null, balanceAfter: balance, accountIban: iban };
+    return {
+      ...r,
+      txType: r.txType ?? null,
+      currency: "EUR",
+      externalId: null,
+      balanceAfter: balance,
+      accountIban: iban,
+    };
   });
   return {
     format: "ing",
@@ -76,46 +87,224 @@ function toParseResult(rows: Row[], iban: string, opening: number): ParseResult 
 
 // --- Personal ------------------------------------------------------------------------
 const personalRows: Row[] = [];
-const p = (date: string, amount: number, counterpartyName: string, description = "", counterpartyIban: string | null = null, txType?: string) =>
-  personalRows.push({ date, amount, counterpartyName, description, counterpartyIban, txType });
+const p = (
+  date: string,
+  amount: number,
+  counterpartyName: string,
+  description = "",
+  counterpartyIban: string | null = null,
+  txType?: string,
+) => personalRows.push({ date, amount, counterpartyName, description, counterpartyIban, txType });
 
-const restaurants = ["Restaurant De Kas", "Cafe Loetje", "Bar Botanique", "Pho Saigon", "Trattoria Da Mario", "Bakkerij Wolf"];
-const supermarkets = ["Albert Heijn 1403 AMSTERDAM", "Jumbo Amsterdam Oost", "Lidl 1234 Amsterdam", "AH to go 5832 Amsterdam"];
+const restaurants = [
+  "Restaurant De Kas",
+  "Cafe Loetje",
+  "Bar Botanique",
+  "Pho Saigon",
+  "Trattoria Da Mario",
+  "Bakkerij Wolf",
+];
+const supermarkets = [
+  "Albert Heijn 1403 AMSTERDAM",
+  "Jumbo Amsterdam Oost",
+  "Lidl 1234 Amsterdam",
+  "AH to go 5832 Amsterdam",
+];
 
 for (const [y, m] of months("2024-01", "2026-09")) {
   const salary = y === 2024 ? 345000 : y === 2025 ? 360000 : 375000;
-  p(day(y, m, 24), salary, "Werkgever B.V.", `Salaris ${pad(m)}-${y}`, "NL91ABNA0417164300", "Overschrijving");
-  if (m === 5) p(day(y, m, 24), salary * 0.8, "Werkgever B.V.", `Vakantiegeld ${y}`, "NL91ABNA0417164300", "Overschrijving");
-  p(day(y, m, 1), y === 2024 || (y === 2025 && m < 7) ? -135000 : -142000, "Woonstichting De Key", "Huur", "NL20RABO0300065264", "Incasso");
-  p(day(y, m, 3), y === 2024 ? -14500 : y === 2025 ? -16500 : -13000, "Vattenfall Klantenservice N.V.", "Termijnbedrag energie", "NL44INGB0000123456", "Incasso");
+  p(
+    day(y, m, 24),
+    salary,
+    "Werkgever B.V.",
+    `Salaris ${pad(m)}-${y}`,
+    "NL91ABNA0417164300",
+    "Overschrijving",
+  );
+  if (m === 5)
+    p(
+      day(y, m, 24),
+      salary * 0.8,
+      "Werkgever B.V.",
+      `Vakantiegeld ${y}`,
+      "NL91ABNA0417164300",
+      "Overschrijving",
+    );
+  p(
+    day(y, m, 1),
+    y === 2024 || (y === 2025 && m < 7) ? -135000 : -142000,
+    "Woonstichting De Key",
+    "Huur",
+    "NL20RABO0300065264",
+    "Incasso",
+  );
+  p(
+    day(y, m, 3),
+    y === 2024 ? -14500 : y === 2025 ? -16500 : -13000,
+    "Vattenfall Klantenservice N.V.",
+    "Termijnbedrag energie",
+    "NL44INGB0000123456",
+    "Incasso",
+  );
   p(day(y, m, 4), -2200, "Waternet", "Voorschot drinkwater", "NL31RABO0123123123", "Incasso");
-  p(day(y, m, 2), y === 2024 ? -13850 : y === 2025 ? -14725 : -15210, "Zilveren Kruis Zorgverzekeringen NV", "Premie zorgverzekering", "NL16INGB0000656565", "Incasso");
-  p(day(y, m, 6), y === 2024 ? -5500 : -5800, "Ziggo Services B.V.", "Ziggo internet & tv", "NL60INGB0000484848", "Incasso");
-  p(day(y, m, 8), -2000, "Odido Netherlands B.V.", "Mobiel abonnement", "NL22INGB0000999888", "Incasso");
-  p(day(y, m, 12), y < 2025 || (y === 2025 && m < 3) ? -1399 : -1599, "Netflix International B.V.", "Netflix.com", null, "Betaalautomaat");
-  p(day(y, m, 15), y === 2024 && m < 9 ? -1099 : y === 2026 && m >= 2 ? -1299 : -1199, "Spotify AB", "Spotify Premium", "NL61BUNQ2025419999", "Incasso");
-  p(day(y, m, 20), -2999, "Basic-Fit Nederland B.V.", "Lidmaatschap", "NL86INGB0002446666", "Incasso");
-  if (m >= 2 && m <= 11) p(day(y, m, 28), -4500, "Gemeente Amsterdam Belastingen", "Gemeentelijke belastingen termijn", "NL77INGB0000777777", "Incasso");
+  p(
+    day(y, m, 2),
+    y === 2024 ? -13850 : y === 2025 ? -14725 : -15210,
+    "Zilveren Kruis Zorgverzekeringen NV",
+    "Premie zorgverzekering",
+    "NL16INGB0000656565",
+    "Incasso",
+  );
+  p(
+    day(y, m, 6),
+    y === 2024 ? -5500 : -5800,
+    "Ziggo Services B.V.",
+    "Ziggo internet & tv",
+    "NL60INGB0000484848",
+    "Incasso",
+  );
+  p(
+    day(y, m, 8),
+    -2000,
+    "Odido Netherlands B.V.",
+    "Mobiel abonnement",
+    "NL22INGB0000999888",
+    "Incasso",
+  );
+  p(
+    day(y, m, 12),
+    y < 2025 || (y === 2025 && m < 3) ? -1399 : -1599,
+    "Netflix International B.V.",
+    "Netflix.com",
+    null,
+    "Betaalautomaat",
+  );
+  p(
+    day(y, m, 15),
+    y === 2024 && m < 9 ? -1099 : y === 2026 && m >= 2 ? -1299 : -1199,
+    "Spotify AB",
+    "Spotify Premium",
+    "NL61BUNQ2025419999",
+    "Incasso",
+  );
+  p(
+    day(y, m, 20),
+    -2999,
+    "Basic-Fit Nederland B.V.",
+    "Lidmaatschap",
+    "NL86INGB0002446666",
+    "Incasso",
+  );
+  if (m >= 2 && m <= 11)
+    p(
+      day(y, m, 28),
+      -4500,
+      "Gemeente Amsterdam Belastingen",
+      "Gemeentelijke belastingen termijn",
+      "NL77INGB0000777777",
+      "Incasso",
+    );
   p(day(y, m, 26), -500000, "Spaarrekening", "Sparen", SAVINGS_IBAN, "Online bankieren");
-  p(day(y, m, 27), m % 3 === 0 ? 600000 : 450000, "W. Freelance (zakelijk)", "Opname eigen bedrijf", BUSINESS_IBAN, "Overschrijving");
+  p(
+    day(y, m, 27),
+    m % 3 === 0 ? 600000 : 450000,
+    "W. Freelance (zakelijk)",
+    "Opname eigen bedrijf",
+    BUSINESS_IBAN,
+    "Overschrijving",
+  );
 
   for (let i = 0; i < 9 + Math.floor(rand() * 4); i++) {
-    p(day(y, m, 1 + Math.floor(rand() * 28)), -Math.round(between(12, 95) * (y === 2026 ? 1.04 : 1)), pick(supermarkets), "Apple Pay", null, "Betaalautomaat");
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -Math.round(between(12, 95) * (y === 2026 ? 1.04 : 1)),
+      pick(supermarkets),
+      "Apple Pay",
+      null,
+      "Betaalautomaat",
+    );
   }
   for (let i = 0; i < 3 + Math.floor(rand() * 4); i++) {
-    p(day(y, m, 1 + Math.floor(rand() * 28)), -between(22, 110), pick(restaurants), "Apple Pay", null, "Betaalautomaat");
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(22, 110),
+      pick(restaurants),
+      "Apple Pay",
+      null,
+      "Betaalautomaat",
+    );
   }
-  for (let i = 0; i < 2 + Math.floor(rand() * 2); i++) p(day(y, m, 1 + Math.floor(rand() * 28)), -between(18, 42), "Thuisbezorgd.nl", "Bestelling via iDEAL", null, "iDEAL");
-  for (let i = 0; i < 4 + Math.floor(rand() * 3); i++) p(day(y, m, 1 + Math.floor(rand() * 28)), -between(3, 28), "NS GROEP IZ NS REIZIGERS", "OV-chipkaart", null, "Betaalautomaat");
-  if (rand() < 0.8) p(day(y, m, 1 + Math.floor(rand() * 28)), -between(15, 120), "bol.com b.v.", "Bestelling bol.com", "NL18ABNA0484869868", "iDEAL");
-  if (rand() < 0.3) p(day(y, m, 1 + Math.floor(rand() * 28)), -between(40, 160), "Zalando SE", "Zalando bestelling", null, "iDEAL");
-  if (rand() < 0.35) p(day(y, m, 1 + Math.floor(rand() * 28)), between(12, 45), "Tikkie", "Etentje via Tikkie", "NL12ABNA0000111111", "Overschrijving");
-  if (rand() < 0.25) p(day(y, m, 1 + Math.floor(rand() * 28)), -between(20, 60), "PayPal Europe S.a.r.l. et Cie S.C.A", "1046512309574 PAYPAL Steam Games", "NL41DEUT0265186439", "Incasso");
-  if (rand() < 0.2) p(day(y, m, 1 + Math.floor(rand() * 28)), -5000, "", "Geldautomaat Amsterdam Centraal", null, "Geldautomaat");
-  if (m === 7) p(day(y, m, 5), -between(650, 1150), "Booking.com B.V.", "Hotel reservering", null, "iDEAL");
-  if (m === 6) p(day(y, m, 10), -between(380, 620), "KLM Royal Dutch Airlines", "Vliegtickets", null, "iDEAL");
-  if (m === 11 && y === 2025) p(day(y, m, 18), -134900, "Coolblue B.V.", "Wasmachine", null, "iDEAL");
-  if (m === 12) p(day(y, m, 15), -between(120, 260), "Bijenkorf Amsterdam", "Cadeaus", null, "Betaalautomaat");
+  for (let i = 0; i < 2 + Math.floor(rand() * 2); i++)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(18, 42),
+      "Thuisbezorgd.nl",
+      "Bestelling via iDEAL",
+      null,
+      "iDEAL",
+    );
+  for (let i = 0; i < 4 + Math.floor(rand() * 3); i++)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(3, 28),
+      "NS GROEP IZ NS REIZIGERS",
+      "OV-chipkaart",
+      null,
+      "Betaalautomaat",
+    );
+  if (rand() < 0.8)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(15, 120),
+      "bol.com b.v.",
+      "Bestelling bol.com",
+      "NL18ABNA0484869868",
+      "iDEAL",
+    );
+  if (rand() < 0.3)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(40, 160),
+      "Zalando SE",
+      "Zalando bestelling",
+      null,
+      "iDEAL",
+    );
+  if (rand() < 0.35)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      between(12, 45),
+      "Tikkie",
+      "Etentje via Tikkie",
+      "NL12ABNA0000111111",
+      "Overschrijving",
+    );
+  if (rand() < 0.25)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -between(20, 60),
+      "PayPal Europe S.a.r.l. et Cie S.C.A",
+      "1046512309574 PAYPAL Steam Games",
+      "NL41DEUT0265186439",
+      "Incasso",
+    );
+  if (rand() < 0.2)
+    p(
+      day(y, m, 1 + Math.floor(rand() * 28)),
+      -5000,
+      "",
+      "Geldautomaat Amsterdam Centraal",
+      null,
+      "Geldautomaat",
+    );
+  if (m === 7)
+    p(day(y, m, 5), -between(650, 1150), "Booking.com B.V.", "Hotel reservering", null, "iDEAL");
+  if (m === 6)
+    p(day(y, m, 10), -between(380, 620), "KLM Royal Dutch Airlines", "Vliegtickets", null, "iDEAL");
+  if (m === 11 && y === 2025)
+    p(day(y, m, 18), -134900, "Coolblue B.V.", "Wasmachine", null, "iDEAL");
+  if (m === 12)
+    p(day(y, m, 15), -between(120, 260), "Bijenkorf Amsterdam", "Cadeaus", null, "Betaalautomaat");
   if (y === 2026 && m === 9) {
     // New payees this month: left for you to categorise in the review screen.
     p(day(y, m, 9), -3200, "Kapsalon Knip", "Apple Pay", null, "Betaalautomaat");
@@ -126,48 +315,146 @@ for (const [y, m] of months("2024-01", "2026-09")) {
 
 // --- Business ----------------------------------------------------------------------
 const businessRows: Row[] = [];
-const b = (date: string, amount: number, counterpartyName: string, description = "", counterpartyIban: string | null = null) =>
-  businessRows.push({ date, amount, counterpartyName, description, counterpartyIban });
+const b = (
+  date: string,
+  amount: number,
+  counterpartyName: string,
+  description = "",
+  counterpartyIban: string | null = null,
+) => businessRows.push({ date, amount, counterpartyName, description, counterpartyIban });
 
 let invoice = 1;
 for (const [y, m] of months("2024-03", "2026-09")) {
   const growth = y === 2024 ? 1 : y === 2025 ? 1.12 : 1.2;
-  b(day(y, m, 14), Math.round(484000 * growth), "Acme BV", `Factuur ${y}-${pad(invoice++)}`, "NL91ABNA0417164300");
-  if (rand() < 0.7) b(day(y, m, 22), Math.round(between(1800, 3200) * 1.21), "Studio Noord", `Factuur ${y}-${pad(invoice++)}`, "NL39RABO0300065264");
-  if (m % 3 === 0) b(day(y, m, 25), 300000, "Nordic Apps AB", `Invoice ${y}-${pad(invoice++)} (reverse charge)`, "SE4550000000058398257466");
+  b(
+    day(y, m, 14),
+    Math.round(484000 * growth),
+    "Acme BV",
+    `Factuur ${y}-${pad(invoice++)}`,
+    "NL91ABNA0417164300",
+  );
+  if (rand() < 0.7)
+    b(
+      day(y, m, 22),
+      Math.round(between(1800, 3200) * 1.21),
+      "Studio Noord",
+      `Factuur ${y}-${pad(invoice++)}`,
+      "NL39RABO0300065264",
+    );
+  if (m % 3 === 0)
+    b(
+      day(y, m, 25),
+      300000,
+      "Nordic Apps AB",
+      `Invoice ${y}-${pad(invoice++)} (reverse charge)`,
+      "SE4550000000058398257466",
+    );
   b(day(y, m, 2), -1380, "Google Cloud EMEA Limited", "Google Workspace", "IE64IRCE92050112345678");
   b(day(y, m, 3), -400, "GitHub, Inc.", "GitHub Pro", null);
-  b(day(y, m, 5), -2419, "Adobe Systems Software Ireland", "Creative Cloud", "IE29AIBK93115212345678");
+  b(
+    day(y, m, 5),
+    -2419,
+    "Adobe Systems Software Ireland",
+    "Creative Cloud",
+    "IE29AIBK93115212345678",
+  );
   b(day(y, m, 6), -1452, "Moneybird B.V.", "Abonnement Moneybird", "NL20INGB0006582810");
   b(day(y, m, 9), -4500, "KPN B.V.", "Zakelijk mobiel", "NL62INGB0000079575");
   b(day(y, m, 1), -30250, "Spaces Zuidas", "Flexplek", "NL33INGB0006789012");
   b(day(y, m, 10), -3500, "Hiscox", "Beroepsaansprakelijkheid", "NL73ABNA0465400000");
   b(day(y, m, 28), -895, "Knab", "Kosten zakelijke rekening", null);
-  for (let i = 0; i < 2 + Math.floor(rand() * 3); i++) b(day(y, m, 1 + Math.floor(rand() * 27)), -between(6, 45), "NS GROEP IZ NS REIZIGERS", "Zakelijke reis", null);
-  if (rand() < 0.5) b(day(y, m, 1 + Math.floor(rand() * 27)), -between(30, 95), "Restaurant De Kas", "Lunch met klant", null);
-  b(day(y, m, 27), m % 3 === 0 ? -600000 : -450000, "W. van Freelance", "Privé opname", PERSONAL_IBAN);
-  if (y >= 2025) b(day(y, m, 20), -85000, "Belastingdienst", `Voorlopige aanslag inkomstenbelasting ${y}`, "NL86INGB0002445588");
+  for (let i = 0; i < 2 + Math.floor(rand() * 3); i++)
+    b(
+      day(y, m, 1 + Math.floor(rand() * 27)),
+      -between(6, 45),
+      "NS GROEP IZ NS REIZIGERS",
+      "Zakelijke reis",
+      null,
+    );
+  if (rand() < 0.5)
+    b(
+      day(y, m, 1 + Math.floor(rand() * 27)),
+      -between(30, 95),
+      "Restaurant De Kas",
+      "Lunch met klant",
+      null,
+    );
+  b(
+    day(y, m, 27),
+    m % 3 === 0 ? -600000 : -450000,
+    "W. van Freelance",
+    "Privé opname",
+    PERSONAL_IBAN,
+  );
+  if (y >= 2025)
+    b(
+      day(y, m, 20),
+      -85000,
+      "Belastingdienst",
+      `Voorlopige aanslag inkomstenbelasting ${y}`,
+      "NL86INGB0002445588",
+    );
   if (m === 1 || m === 4 || m === 7 || m === 10) {
     const q = m === 1 ? 4 : (m - 1) / 3;
     const qy = m === 1 ? y - 1 : y;
     if (qy > 2024 || (qy === 2024 && q >= 2)) {
-      b(day(y, m, 28), -between(3500, 4300), "Belastingdienst", `Omzetbelasting ${q}e kwartaal ${qy}`, "NL86INGB0002445588");
+      b(
+        day(y, m, 28),
+        -between(3500, 4300),
+        "Belastingdienst",
+        `Omzetbelasting ${q}e kwartaal ${qy}`,
+        "NL86INGB0002445588",
+      );
     }
   }
-  if (m === 3 && y >= 2025) b(day(y, m, 18), -121000, "Boekhouder Jansen", `Jaarrekening en aangifte ${y - 1}`, "NL55RABO0123456700");
+  if (m === 3 && y >= 2025)
+    b(
+      day(y, m, 18),
+      -121000,
+      "Boekhouder Jansen",
+      `Jaarrekening en aangifte ${y - 1}`,
+      "NL55RABO0123456700",
+    );
 }
 b("2025-02-11", -290400, "Coolblue B.V.", "MacBook Pro 14", null);
 
 // --- Write -------------------------------------------------------------------------------
-const personal = createAccount(db, { name: "ING Betaalrekening", kind: "personal", iban: PERSONAL_IBAN });
-createAccount(db, { name: "Spaarrekening", kind: "personal", iban: SAVINGS_IBAN, description: "Savings", isSavings: true });
-const business = createAccount(db, { name: "Knab Zakelijk", kind: "business", iban: BUSINESS_IBAN });
+const personal = createAccount(db, {
+  name: "ING Betaalrekening",
+  kind: "personal",
+  iban: PERSONAL_IBAN,
+});
+createAccount(db, {
+  name: "Spaarrekening",
+  kind: "personal",
+  iban: SAVINGS_IBAN,
+  description: "Savings",
+  isSavings: true,
+});
+const business = createAccount(db, {
+  name: "Knab Zakelijk",
+  kind: "business",
+  iban: BUSINESS_IBAN,
+});
 
 const cat = (name: string, scope: "personal" | "business") =>
-  db.select().from(categories).where(eq(categories.name, name)).all().find((c) => c.scope === scope)!.id;
+  db
+    .select()
+    .from(categories)
+    .where(eq(categories.name, name))
+    .all()
+    .find((c) => c.scope === scope)!.id;
 
 /** Simulates the monthly routine: import, then categorise what the rules didn't know. */
-function importAndReview(accountId: number, rows: Row[], iban: string, opening: number, chunks: [string, string][], decisions: [string, string, "personal" | "business"][], leaveLastChunk = true) {
+function importAndReview(
+  accountId: number,
+  rows: Row[],
+  iban: string,
+  opening: number,
+  chunks: [string, string][],
+  decisions: [string, string, "personal" | "business"][],
+  leaveLastChunk = true,
+) {
   let balance = opening;
   chunks.forEach(([from, to], i) => {
     const chunk = rows.filter((r) => r.date >= `${from}-01` && r.date <= `${to}-31`);
@@ -175,9 +462,18 @@ function importAndReview(accountId: number, rows: Row[], iban: string, opening: 
     balance = parsed.closingBalance!.amount;
     commitImport(db, accountId, `${iban}_${from}_${to}.csv`, parsed);
     if (leaveLastChunk && i === chunks.length - 1) return;
-    const open = db.select().from(transactions).where(eq(transactions.accountId, accountId)).all().filter((t) => t.categoryId == null);
+    const open = db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.accountId, accountId))
+      .all()
+      .filter((t) => t.categoryId == null);
     for (const [needle, category, scope] of decisions) {
-      const tx = open.find((t) => normalizeText(`${t.counterpartyName} ${t.description}`).includes(normalizeText(needle)) && t.categoryId == null);
+      const tx = open.find(
+        (t) =>
+          normalizeText(`${t.counterpartyName} ${t.description}`).includes(normalizeText(needle)) &&
+          t.categoryId == null,
+      );
       if (tx) setCategoryManually(db, tx.id, cat(category, scope), true);
     }
   });
@@ -236,7 +532,13 @@ importAndReview(
 );
 
 // Budget for the personal account (monthly unless noted)
-const line = (name: string, euros: number, category: string, type: "fixed" | "variable" = "fixed", frequency: "monthly" | "quarterly" | "yearly" = "monthly") => ({
+const line = (
+  name: string,
+  euros: number,
+  category: string,
+  type: "fixed" | "variable" = "fixed",
+  frequency: "monthly" | "quarterly" | "yearly" = "monthly",
+) => ({
   name,
   amount: euros * 100,
   categoryId: cat(category, "personal"),
@@ -281,7 +583,13 @@ for (const year of [2025, 2026]) {
     const date = new Date(Date.UTC(year, 0, 6 + week * 7)).toISOString().slice(0, 10);
     if (date > "2026-09-30") break;
     if (week % 13 === 7) continue; // holidays
-    addHours(db, business.id, date, 24 + Math.round(rand() * 10), "Client work, admin and acquisition");
+    addHours(
+      db,
+      business.id,
+      date,
+      24 + Math.round(rand() * 10),
+      "Client work, admin and acquisition",
+    );
   }
 }
 updateTaxYear(db, getTaxYear(db, business.id, 2025).id, { isStarter: true });

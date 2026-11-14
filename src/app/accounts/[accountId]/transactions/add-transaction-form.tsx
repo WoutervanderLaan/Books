@@ -11,7 +11,15 @@ import { todayIso } from "@/lib/dates";
 import { VAT_CODES, VAT_CODE_LABELS } from "@/lib/types";
 
 /** Dialog for transactions that aren't in a bank file: cash, mileage, invoices paid privately. */
-export function AddTransactionForm({ accountId, business, categories }: { accountId: number; business: boolean; categories: Category[] }) {
+export function AddTransactionForm({
+  accountId,
+  business,
+  categories,
+}: {
+  accountId: number;
+  business: boolean;
+  categories: Category[];
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const [state, action] = useActionState(addManualTransactionAction.bind(null, accountId), null);
@@ -33,7 +41,8 @@ export function AddTransactionForm({ accountId, business, categories }: { accoun
           <div>
             <h2 className="text-base font-semibold">Add a transaction</h2>
             <p className="mt-1 text-sm text-ink-2">
-              For things that aren&apos;t in your bank export, like cash payments{business ? ", business kilometres or a business expense paid privately" : ""}.
+              For things that aren&apos;t in your bank export, like cash payments
+              {business ? ", business kilometres or a business expense paid privately" : ""}.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -59,7 +68,10 @@ export function AddTransactionForm({ accountId, business, categories }: { accoun
               </Select>
             </Field>
             <Field label="Description" className="sm:col-span-2">
-              <Input name="description" placeholder={business ? "e.g. 312 km × €0,23 client visits" : ""} />
+              <Input
+                name="description"
+                placeholder={business ? "e.g. 312 km × €0,23 client visits" : ""}
+              />
             </Field>
             {business ? (
               <Field label="VAT">

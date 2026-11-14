@@ -34,7 +34,10 @@ export function loadRuleContext(db: DB): RuleContext {
     .all();
   return {
     rules: sortRules(db.select().from(rules).where(eq(rules.enabled, true)).all()),
-    accounts: db.select({ id: accounts.id, kind: accounts.kind, iban: accounts.iban }).from(accounts).all(),
+    accounts: db
+      .select({ id: accounts.id, kind: accounts.kind, iban: accounts.iban })
+      .from(accounts)
+      .all(),
     categories: cats,
     kinds: new Map(cats.map((c) => [c.id, c.kind])),
   };
@@ -53,11 +56,16 @@ export interface Categorisation {
 }
 
 /** Decides a category for one transaction: own-account transfers first, then rules. */
-export function categorise(tx: TxForRules, account: AccountLike, ctx: RuleContext): Categorisation | null {
+export function categorise(
+  tx: TxForRules,
+  account: AccountLike,
+  ctx: RuleContext,
+): Categorisation | null {
   const transfer = detectOwnTransfer(tx, account, ctx.accounts, ctx.categories);
   if (transfer) return { categoryId: transfer, source: "transfer", ruleId: null, vatCode: null };
   const rule = findMatchingRule(ctx.rules, tx, account, ctx.kinds);
-  if (rule) return { categoryId: rule.categoryId, source: "rule", ruleId: rule.id, vatCode: rule.vatCode };
+  if (rule)
+    return { categoryId: rule.categoryId, source: "rule", ruleId: rule.id, vatCode: rule.vatCode };
   return null;
 }
 
@@ -66,7 +74,11 @@ export function categorise(tx: TxForRules, account: AccountLike, ctx: RuleContex
  * transactions are never touched. With `overwrite`, transactions previously
  * categorised by a rule are re-evaluated too.
  */
-export function applyRules(db: DB, accountId: number, opts: { overwrite?: boolean; importId?: number } = {}): number {
+export function applyRules(
+  db: DB,
+  accountId: number,
+  opts: { overwrite?: boolean; importId?: number } = {},
+): number {
   const account = db.select().from(accounts).where(eq(accounts.id, accountId)).get();
   if (!account) return 0;
   const ctx = loadRuleContext(db);
@@ -77,7 +89,11 @@ export function applyRules(db: DB, accountId: number, opts: { overwrite?: boolea
       ? or(isNull(transactions.categorySource), ne(transactions.categorySource, "manual"))!
       : isNull(transactions.categoryId),
   );
-  const rows = db.select().from(transactions).where(and(...conditions)).all();
+  const rows = db
+    .select()
+    .from(transactions)
+    .where(and(...conditions))
+    .all();
 
   let changed = 0;
   const applied = new Map<number, number>();
@@ -146,14 +162,26 @@ export function setCategoryManually(
   if (!remember || categoryId == null) return { rule: null, applied: 0 };
   const suggestion = suggestRule(row);
   if (!suggestion) return { rule: null, applied: 0 };
-  const kinds = new Map(db.select({ id: categories.id, kind: categories.kind }).from(categories).all().map((c) => [c.id, c.kind]));
+  const kinds = new Map(
+    db
+      .select({ id: categories.id, kind: categories.kind })
+      .from(categories)
+      .all()
+      .map((c) => [c.id, c.kind]),
+  );
   const kind = kinds.get(categoryId);
   // A refund (money in for an expense category, or the reverse) gets its own
   // rule with an explicit direction, next to the payee's regular rule.
-  const direction = kind && !kindFitsAmount(kind, row.amount) ? (row.amount >= 0 ? "in" : "out") : null;
+  const direction =
+    kind && !kindFitsAmount(kind, row.amount) ? (row.amount >= 0 ? "in" : "out") : null;
 
-  const same = (col: typeof rules.counterpartyContains | typeof rules.descriptionContains | typeof rules.counterpartyIban, v: string | null) =>
-    v == null ? isNull(col) : eq(col, v);
+  const same = (
+    col:
+      | typeof rules.counterpartyContains
+      | typeof rules.descriptionContains
+      | typeof rules.counterpartyIban,
+    v: string | null,
+  ) => (v == null ? isNull(col) : eq(col, v));
   const existing = db
     .select()
     .from(rules)
@@ -171,10 +199,22 @@ export function setCategoryManually(
     .get();
 
   const rule = existing
-    ? db.update(rules).set({ categoryId, enabled: true }).where(eq(rules.id, existing.id)).returning().get()
+    ? db
+        .update(rules)
+        .set({ categoryId, enabled: true })
+        .where(eq(rules.id, existing.id))
+        .returning()
+        .get()
     : db
         .insert(rules)
-        .values({ ...suggestion, direction, accountId: account.id, categoryId, source: "auto", timesApplied: 1 })
+        .values({
+          ...suggestion,
+          direction,
+          accountId: account.id,
+          categoryId,
+          source: "auto",
+          timesApplied: 1,
+        })
         .returning()
         .get();
 
@@ -190,12 +230,19 @@ export function setCategoryManually(
       ),
     )
     .all()
-    .filter((t) => t.categorySource !== "manual" && ruleMatches(rule, t) && ruleFitsSign(rule, t, kinds));
+    .filter(
+      (t) => t.categorySource !== "manual" && ruleMatches(rule, t) && ruleFitsSign(rule, t, kinds),
+    );
 
   if (candidates.length) {
     db.update(transactions)
       .set({ categoryId, categorySource: "rule", ruleId: rule.id })
-      .where(inArray(transactions.id, candidates.map((c) => c.id)))
+      .where(
+        inArray(
+          transactions.id,
+          candidates.map((c) => c.id),
+        ),
+      )
       .run();
     db.update(rules)
       .set({ timesApplied: sql`${rules.timesApplied} + ${candidates.length}` })

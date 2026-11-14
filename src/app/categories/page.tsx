@@ -64,11 +64,25 @@ export default function CategoriesPage() {
                         {c.archived ? <Badge className="ml-2">Archived</Badge> : null}
                       </td>
                       <td className={`${td} text-ink-2`}>{c.groupName}</td>
-                      <td className={`${td} text-ink-2`}>{c.kind === "income" ? "Income" : c.kind === "expense" ? "Spending" : "Transfer"}</td>
-                      {business ? <td className={`${td} text-ink-2`}>{c.vatCode ? VAT_CODE_LABELS[c.vatCode] : "—"}</td> : null}
+                      <td className={`${td} text-ink-2`}>
+                        {c.kind === "income"
+                          ? "Income"
+                          : c.kind === "expense"
+                            ? "Spending"
+                            : "Transfer"}
+                      </td>
                       {business ? (
                         <td className={`${td} text-ink-2`}>
-                          {c.taxGroup ? TAX_GROUP_LABELS[c.taxGroup] : c.role === "asset" ? "Depreciation" : "—"}
+                          {c.vatCode ? VAT_CODE_LABELS[c.vatCode] : "—"}
+                        </td>
+                      ) : null}
+                      {business ? (
+                        <td className={`${td} text-ink-2`}>
+                          {c.taxGroup
+                            ? TAX_GROUP_LABELS[c.taxGroup]
+                            : c.role === "asset"
+                              ? "Depreciation"
+                              : "—"}
                           {c.deductiblePct !== 100 ? ` · ${c.deductiblePct}% deductible` : ""}
                         </td>
                       ) : null}

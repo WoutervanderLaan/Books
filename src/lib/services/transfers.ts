@@ -15,8 +15,13 @@ function candidateRows(db: DB): Transaction[] {
     .all()
     .map((a) => a.iban!);
   const conditions = [eq(transactions.categorySource, "transfer")];
-  if (ibans.length) conditions.push(inArray(sql`upper(replace(${transactions.counterpartyIban}, ' ', ''))`, ibans));
-  return db.select().from(transactions).where(or(...conditions)).all();
+  if (ibans.length)
+    conditions.push(inArray(sql`upper(replace(${transactions.counterpartyIban}, ' ', ''))`, ibans));
+  return db
+    .select()
+    .from(transactions)
+    .where(or(...conditions))
+    .all();
 }
 
 export interface RelinkResult {
@@ -35,7 +40,13 @@ export interface RelinkResult {
  */
 export function relinkOwnTransfers(db: DB): RelinkResult {
   const ctx = loadRuleContext(db);
-  const accountById = new Map(db.select().from(accounts).all().map((a) => [a.id, a]));
+  const accountById = new Map(
+    db
+      .select()
+      .from(accounts)
+      .all()
+      .map((a) => [a.id, a]),
+  );
   const result: RelinkResult = { linked: 0, unlinked: 0, review: 0 };
 
   db.transaction((tx) => {
@@ -72,10 +83,18 @@ export function relinkOwnTransfers(db: DB): RelinkResult {
 }
 
 /** A manual category differs meaningfully from the detected transfer category. */
-function needsReview(current: number | null, detected: number, kinds: Map<number, string>): boolean {
+function needsReview(
+  current: number | null,
+  detected: number,
+  kinds: Map<number, string>,
+): boolean {
   if (current === detected) return false;
   // Both are "transfer" kind (e.g. "Savings & investments" vs "Internal transfer"): already left out of totals.
-  return !(current != null && kinds.get(current) === "transfer" && kinds.get(detected) === "transfer");
+  return !(
+    current != null &&
+    kinds.get(current) === "transfer" &&
+    kinds.get(detected) === "transfer"
+  );
 }
 
 export interface TransferReviewRow {
@@ -99,12 +118,21 @@ export interface MissingCounterpart extends UnmatchedTransfer {
   description: string;
 }
 
-export function transferOverview(db: DB): { review: TransferReviewRow[]; missing: MissingCounterpart[] } {
+export function transferOverview(db: DB): {
+  review: TransferReviewRow[];
+  missing: MissingCounterpart[];
+} {
   const ctx = loadRuleContext(db);
   const accountList = db.select().from(accounts).all();
   const accountById = new Map(accountList.map((a) => [a.id, a]));
   const accountByIban = new Map(accountList.filter((a) => a.iban).map((a) => [a.iban!, a]));
-  const catName = new Map(db.select({ id: categories.id, name: categories.name }).from(categories).all().map((c) => [c.id, c.name]));
+  const catName = new Map(
+    db
+      .select({ id: categories.id, name: categories.name })
+      .from(categories)
+      .all()
+      .map((c) => [c.id, c.name]),
+  );
 
   const rows = candidateRows(db);
   const review: TransferReviewRow[] = [];
@@ -144,7 +172,12 @@ export function transferOverview(db: DB): { review: TransferReviewRow[]; missing
   const legById = new Map(legs.map((l) => [l.id, l]));
   const missing = unmatchedTransfers(
     legs,
-    accountList.map((a) => ({ id: a.id, iban: a.iban, first: spanOf.get(a.id)?.first ?? null, last: spanOf.get(a.id)?.last ?? null })),
+    accountList.map((a) => ({
+      id: a.id,
+      iban: a.iban,
+      first: spanOf.get(a.id)?.first ?? null,
+      last: spanOf.get(a.id)?.last ?? null,
+    })),
   ).map((m) => {
     const leg = legById.get(m.leg.id)!;
     return {
@@ -165,7 +198,13 @@ export function transferOverview(db: DB): { review: TransferReviewRow[]; missing
 export function acceptTransferSuggestions(db: DB, ids: number[]): number {
   if (!ids.length) return 0;
   const ctx = loadRuleContext(db);
-  const accountById = new Map(db.select().from(accounts).all().map((a) => [a.id, a]));
+  const accountById = new Map(
+    db
+      .select()
+      .from(accounts)
+      .all()
+      .map((a) => [a.id, a]),
+  );
   const rows = db.select().from(transactions).where(inArray(transactions.id, ids)).all();
   let n = 0;
   db.transaction((tx) => {

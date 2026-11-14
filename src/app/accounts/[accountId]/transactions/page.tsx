@@ -12,7 +12,10 @@ export const metadata = { title: "Transactions" };
 const PAGE_SIZE = 100;
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
 
-export default async function TransactionsPage({ params, searchParams }: PageProps<"/accounts/[accountId]/transactions">) {
+export default async function TransactionsPage({
+  params,
+  searchParams,
+}: PageProps<"/accounts/[accountId]/transactions">) {
   const { accountId } = await params;
   const sp = await searchParams;
   const account = requireAccount(accountId);
@@ -25,17 +28,27 @@ export default async function TransactionsPage({ params, searchParams }: PagePro
     accountId: account.id,
     from: one(sp.from),
     to: one(sp.to),
-    category: categoryParam === "none" ? ("none" as const) : categoryParam ? Number(categoryParam) : undefined,
+    category:
+      categoryParam === "none"
+        ? ("none" as const)
+        : categoryParam
+          ? Number(categoryParam)
+          : undefined,
     search: one(sp.q),
-    direction: one(sp.dir) === "in" ? ("in" as const) : one(sp.dir) === "out" ? ("out" as const) : undefined,
-    sort: (one(sp.sort) as "date_desc" | "date_asc" | "amount_asc" | "amount_desc" | undefined) ?? "date_desc",
+    direction:
+      one(sp.dir) === "in" ? ("in" as const) : one(sp.dir) === "out" ? ("out" as const) : undefined,
+    sort:
+      (one(sp.sort) as "date_desc" | "date_asc" | "amount_asc" | "amount_desc" | undefined) ??
+      "date_desc",
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   };
   const { rows, total } = queryTransactions(db, filter);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageHref = (n: number) => {
-    const next = new URLSearchParams(Object.entries(sp).filter(([, v]) => typeof v === "string") as [string, string][]);
+    const next = new URLSearchParams(
+      Object.entries(sp).filter(([, v]) => typeof v === "string") as [string, string][],
+    );
     next.set("page", String(n));
     return `?${next.toString()}`;
   };
@@ -45,7 +58,11 @@ export default async function TransactionsPage({ params, searchParams }: PagePro
       <form className="no-print flex flex-wrap items-end gap-2" method="get">
         <label className="min-w-52 flex-1">
           <span className="mb-1 block text-xs text-muted">Search</span>
-          <Input name="q" defaultValue={filter.search} placeholder="Payee, description, IBAN, note" />
+          <Input
+            name="q"
+            defaultValue={filter.search}
+            placeholder="Payee, description, IBAN, note"
+          />
         </label>
         <label>
           <span className="mb-1 block text-xs text-muted">Category</span>
@@ -94,7 +111,11 @@ export default async function TransactionsPage({ params, searchParams }: PagePro
           {categoryParam === "none" && total > 0 ? " to categorise" : ""}
         </p>
         <div className="flex gap-2">
-          <AddTransactionForm accountId={account.id} business={account.kind === "business"} categories={categories} />
+          <AddTransactionForm
+            accountId={account.id}
+            business={account.kind === "business"}
+            categories={categories}
+          />
           <a className={buttonClass("secondary", "sm")} href={`/api/accounts/${account.id}/export`}>
             <Download className="size-3.5" aria-hidden /> Export CSV
           </a>
@@ -104,7 +125,13 @@ export default async function TransactionsPage({ params, searchParams }: PagePro
       <Card>
         <TransactionTable
           rows={rows}
-          categories={categories.map((c) => ({ id: c.id, name: c.name, groupName: c.groupName, kind: c.kind, vatCode: c.vatCode }))}
+          categories={categories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            groupName: c.groupName,
+            kind: c.kind,
+            vatCode: c.vatCode,
+          }))}
           business={account.kind === "business"}
           accountId={account.id}
         />

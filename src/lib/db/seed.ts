@@ -34,7 +34,8 @@ export function seedDefaults(db: DB) {
 
     for (const r of STARTER_RULES) {
       const categoryId = ids.get(`${r.kind}:${r.category}`);
-      if (!categoryId) throw new Error(`Seed rule refers to unknown category ${r.kind}:${r.category}`);
+      if (!categoryId)
+        throw new Error(`Seed rule refers to unknown category ${r.kind}:${r.category}`);
       const patterns = r.counterparty ?? [null];
       for (const pattern of patterns) {
         tx.insert(rules)

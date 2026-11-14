@@ -16,7 +16,8 @@ export function fileSignature(rows: string[][], hasHeader: boolean): string {
 /** Applies a user defined column mapping to CSV rows. */
 export function parseWithMapping(rows: string[][], mapping: CsvMapping): ParsedTransaction[] {
   const body = (mapping.hasHeader ? rows.slice(1) : rows).filter((r) => r.some((c) => c.trim()));
-  const get = (r: string[], i: number | undefined) => (i == null || i < 0 ? "" : (r[i] ?? "").trim());
+  const get = (r: string[], i: number | undefined) =>
+    i == null || i < 0 ? "" : (r[i] ?? "").trim();
   const debitValues = (mapping.debitValues ?? "")
     .split(",")
     .map((v) => v.trim().toLowerCase())
@@ -28,7 +29,8 @@ export function parseWithMapping(rows: string[][], mapping: CsvMapping): ParsedT
       if (mapping.amountMode === "split") {
         const credit = get(r, mapping.amount);
         const debit = get(r, mapping.debit);
-        amount = (credit ? Math.abs(parseAmount(credit, mapping.decimal)) : 0) -
+        amount =
+          (credit ? Math.abs(parseAmount(credit, mapping.decimal)) : 0) -
           (debit ? Math.abs(parseAmount(debit, mapping.decimal)) : 0);
       } else {
         amount = parseAmount(get(r, mapping.amount), mapping.decimal);
@@ -59,7 +61,9 @@ export function parseWithMapping(rows: string[][], mapping: CsvMapping): ParsedT
 
 const find = (header: string[], patterns: RegExp[], exclude: number[] = []): number | undefined => {
   for (const p of patterns) {
-    const i = header.findIndex((h, idx) => !exclude.includes(idx) && p.test(h.trim().toLowerCase()));
+    const i = header.findIndex(
+      (h, idx) => !exclude.includes(idx) && p.test(h.trim().toLowerCase()),
+    );
     if (i >= 0) return i;
   }
   return undefined;
@@ -68,20 +72,36 @@ const find = (header: string[], patterns: RegExp[], exclude: number[] = []): num
 /** Best-effort mapping suggestion for an unknown CSV layout. */
 export function suggestMapping(rows: string[][], delimiter: string): CsvMapping {
   const first = rows[0] ?? [];
-  const looksLikeHeader = first.some((c) => /[a-z]{3,}/i.test(c)) && !first.some((c) => /^\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}$/.test(c.trim()));
+  const looksLikeHeader =
+    first.some((c) => /[a-z]{3,}/i.test(c)) &&
+    !first.some((c) => /^\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}$/.test(c.trim()));
   const header = looksLikeHeader ? first : first.map((_, i) => `Column ${i + 1}`);
   const body = rows.slice(looksLikeHeader ? 1 : 0, 30);
 
-  let date = find(header, [/^(boekings|transactie|booking |transaction )?dat(e|um)$/, /date|datum/]);
+  let date = find(header, [
+    /^(boekings|transactie|booking |transaction )?dat(e|um)$/,
+    /date|datum/,
+  ]);
   if (date == null) {
     date = first.findIndex((_, i) => guessDateFormat(body.map((r) => r[i] ?? "")) != null);
     if (date < 0) date = 0;
   }
   const amount = find(header, [/^(bedrag|amount)/, /bedrag|amount|value/]) ?? 1;
   const indicator = find(header, [/af ?bij|debit\/credit|credit ?debe?t|^d\/c$|^cd$/]);
-  const name = find(header, [/naam tegen|counterparty name|^name$|^naam$|payee|beneficiary|tegenpartij/, /naam|name/]);
-  const iban = find(header, [/tegenrekening|counterparty (iban|account)|^counterparty$/], [date, amount]);
-  const description = find(header, [/omschrijving|description|mededeling|memo|details|reference/], [name ?? -1]);
+  const name = find(header, [
+    /naam tegen|counterparty name|^name$|^naam$|payee|beneficiary|tegenpartij/,
+    /naam|name/,
+  ]);
+  const iban = find(
+    header,
+    [/tegenrekening|counterparty (iban|account)|^counterparty$/],
+    [date, amount],
+  );
+  const description = find(
+    header,
+    [/omschrijving|description|mededeling|memo|details|reference/],
+    [name ?? -1],
+  );
   const balance = find(header, [/saldo|balance/]);
 
   const amountSamples = body.map((r) => r[amount] ?? "");
@@ -106,5 +126,6 @@ export function suggestMapping(rows: string[][], delimiter: string): CsvMapping 
 }
 
 export function assertMappingUsable(mapping: CsvMapping) {
-  if (mapping.date == null || mapping.amount == null) throw new ImportError("Map at least the date and amount columns.");
+  if (mapping.date == null || mapping.amount == null)
+    throw new ImportError("Map at least the date and amount columns.");
 }

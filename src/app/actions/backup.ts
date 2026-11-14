@@ -8,9 +8,13 @@ import { errorMessage, type ActionResult } from "@/lib/form";
 import { refreshAll } from "./revalidate";
 
 /** Replaces the database with an uploaded backup. The current file is kept next to it. */
-export async function restoreBackupAction(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+export async function restoreBackupAction(
+  _prev: ActionResult | null,
+  fd: FormData,
+): Promise<ActionResult> {
   const file = fd.get("file");
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose a backup file (.db)." };
+  if (!(file instanceof File) || file.size === 0)
+    return { ok: false, error: "Choose a backup file (.db)." };
   const dir = getDataDir();
   const incoming = path.join(dir, `restore-${Date.now()}.db`);
   try {
