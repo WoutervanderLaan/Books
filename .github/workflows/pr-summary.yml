@@ -1,0 +1,38 @@
+name: PR Summary
+
+# Writes the "Summary" and "Changes per file" sections of every pull request description
+# (see .github/prompts/pr-summary.md and .github/pull_request_template.md).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-summary-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  summarize:
+    # Secrets are not available to PRs from forks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Write PR summary
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Pull request: #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+            Follow the instructions in .github/prompts/pr-summary.md.
+          claude_args: >-
+            --allowedTools "Read,Glob,Grep,Write(/tmp/pr-body.md),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)"

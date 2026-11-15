@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(npm run db:generate)",
+      "Bash(node --no-warnings scripts/ci/security-scope.ts:*)"
+    ],
+    "deny": ["Read(./data/**)", "Read(./demo-data/**)", "Read(./.env*)"]
+  }
+}
